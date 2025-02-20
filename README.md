@@ -2,7 +2,8 @@
 **Backend for TradeSenseAI – AI-Powered Stock Prediction**  
 
 <a href="https://trade-sense-ai-sigma.vercel.app">Check Out The Website TradeSenseAI So Far Here
-<img src="./assets/linkgrey.png" alt="Home" width="20"/>
+<img src="./assets/tsai.svg" alt="logo" width="250"/>
+<img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
 ## 📌 Overview  
