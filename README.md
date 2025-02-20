@@ -6,7 +6,7 @@
 </a>
 
 ## 📌 Overview  
-Mercur-AI is the backend system powering TradeSenseAI, a hybrid stock prediction tool that leverages financial data, social sentiment analysis, and AI-driven insights. Built using **Flask**, it serves as the core data processing and machine learning engine, handling API integrations, sentiment analysis, and stock market predictions.  
+Altharion is the backend system powering TradeSenseAI, a hybrid stock prediction tool that leverages financial data, social sentiment analysis, and AI-driven insights. Built using **Flask**, it serves as the core data processing and machine learning engine, handling API integrations, sentiment analysis, and stock market predictions.  
 
 ## 🔥 Features  
 ✅ **Financial Data Integration** – Fetches stock prices, trading volume, and technical indicators using APIs like Yahoo Finance, Alpha Vantage, and IEX Cloud.  
