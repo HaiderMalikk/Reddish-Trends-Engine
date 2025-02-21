@@ -1,4 +1,5 @@
 /.qodo
-/MAIenv
+/altharion-venv
 .env
 .DS_STORE
+

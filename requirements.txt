@@ -3,3 +3,4 @@ tweepy
 praw
 flask
 pytrends
+dotenv
