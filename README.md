@@ -1,8 +1,9 @@
 # <img src="./assets/logo-w-text.svg" alt="Home" width="500"/> 
-**Backend for TradeSenseAI – AI-Powered Stock Prediction**  
+**Backend for TradeSenseAI – AI-Powered market analyst*  
 
 <a href="https://trade-sense-ai-sigma.vercel.app">Check Out The Website TradeSenseAI So Far Here
-<img src="./assets/tsai.svg" alt="logo" width="250"/>
+</br>
+<img src="./assets/tsai.svg" alt="logo" width="250"/> 
 <img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
