@@ -12,3 +12,4 @@ regex
 pandas
 tqdm
 yaspin
+finnhub-python

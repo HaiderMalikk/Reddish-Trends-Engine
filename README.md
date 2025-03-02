@@ -7,9 +7,10 @@
 <img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
-## Current Version √A is the first version of the Altharion engine, so far the reddit analysis has been completed, it can anylize any subreddit and output the best, worst and trending stocks from the subreddit. Soon i will add the technical side of things with yf finance and AlphaVantage etc. The first version while humble is sure to deliver unique and amazing stock recomendations.
-test run of the reddit analysis:
-<img src="./assets/testrun.png" alt="Home" width="400"/>
+## Current Version √A is the first version of the Altharion engine, so far the reddit analysis has been completed, it can anylize any subreddit and output the best, worst and trending stocks from the subreddit this is then fed to market analizers that get the price, high, low, rsi etc for those stocks in the sentiment analysis, the results are outputed to the user. The first version while humble is sure to deliver unique and amazing stock recomendations.
+- test run of the sentiment + market analysis, resulting is a table of values.
+
+<img src="./assets/test_table.png" alt="Home" width="400"/>
 
 ## 📌 Overview  
 Altharion is the backend system powering TradeSenseAI, a hybrid stock prediction tool that leverages financial data, social sentiment analysis, and AI-driven insights. Built using **Flask**, it serves as the core data processing and machine learning engine, handling API integrations, sentiment analysis, and stock market predictions.  
@@ -21,15 +22,15 @@ Altharion is the backend system powering TradeSenseAI, a hybrid stock prediction
 ✅ **REST API** – Provides structured endpoints for stock insights, predictions, and trend analysis.  
 
 ## 🏗️ Tech Stack  
-- **Backend:** Flask, Python, Jupyter Notebook, Pytest
+- **Backend:** Flask, Python, Jupyter Notebook, Pytest, Pandas
 - **Machine Learning:** scikit-learn, TensorFlow, Pandas, Numpy, OpenCV, Pytorch, OpenAI GPT API
 - **Databases:** Firebase
-- **APIs Used:** Yahoo Finance API, IEX Cloud, Alpha Vantage, Twitter/X API, Reddit API, Google Trends API
+- **APIs Used:** Yahoo Finance API, Finhub, Twitter/X API, Reddit API, Google Trends API
 - **Hosting:** Heroku
 
 ## 🔮 Coming Soon: Version 1.0  
 The first release will be a **simplified LLM-powered system** that combines GPT-based insights with real-time stock data. This version will:  
-✅ Fetch stock market data & trends from APIs  
+✅ Fetch stock market data & sentiment trends from APIs  
 ✅ Generate AI-driven stock predictions using OpenAI’s GPT  
 ✅ Provide a RESTful API for frontend integration  
 
