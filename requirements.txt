@@ -6,3 +6,9 @@ pytrends
 dotenv
 yahooquery
 requests
+openai
+vaderSentiment
+regex
+pandas
+tqdm
+yaspin

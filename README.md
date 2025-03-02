@@ -7,6 +7,10 @@
 <img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
+## Current Version √A is the first version of the Altharion engine, so far the reddit analysis has been completed, it can anylize any subreddit and output the best, worst and trending stocks from the subreddit. Soon i will add the technical side of things with yf finance and AlphaVantage etc. The first version while humble is sure to deliver unique and amazing stock recomendations.
+test run of the reddit analysis:
+<img src="./assets/testrun.png" alt="Home" width="400"/>
+
 ## 📌 Overview  
 Altharion is the backend system powering TradeSenseAI, a hybrid stock prediction tool that leverages financial data, social sentiment analysis, and AI-driven insights. Built using **Flask**, it serves as the core data processing and machine learning engine, handling API integrations, sentiment analysis, and stock market predictions.  
 
