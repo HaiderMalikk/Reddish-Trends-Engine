@@ -8,66 +8,64 @@ the analysis.
 - it then merges the Reddit sentiment analysis with the stock data using the merge_stock_data function.
 - it finally displays the stock analysis in a structured format using the display_stock_analysis function.
 
-- for the stock data, it fetches the stock price, etc etc from Finnhub API. and the RSI, moving averages from yfinance.
-- it then calculates the RSI and returns the structured data using pandas DataFrame.
+- for the stock data, it fetches the stock price, etc etc from the yfinance module.\
 """
 
-import finnhub
-import os
-import pandas as pd
 import yfinance as yf
-from dotenv import load_dotenv
-
-# Load API keys
-load_dotenv()
-finnhub_api_key = os.getenv("FINNHUB_API_KEY")
-
-# Initialize Finnhub client
-finnhub_client = finnhub.Client(api_key=finnhub_api_key)
 
 
-def get_stock_data(symbol):
+def get_stock_data(symbol: str, period: str = "1mo") -> dict | None:
     """
-    Fetches stock data for the given symbol using Finnhub API and calculates the RSI using yfinance.
+    Fetches stock data for a given symbol using yfinance and calculates the RSI value.
 
     Parameters:
         symbol (str): The stock symbol to fetch data for.
+        period (str): The period for which to fetch data. Defaults to "1mo".
 
     Returns:
-        dict: Structured data containing the current price, daily high, daily low, price change, and RSI value.
+        dict | None: A dictionary containing the current price, daily high, daily low, price change, and RSI value. If unable to fetch data, returns None.
     """
     try:
-        # Get stock quote (price data)
-        quote = finnhub_client.quote(symbol)
+        # Fetch stock data using yfinance
+        data = yf.download(symbol, period=period, progress=False)
 
-        # rsi
-        # Download data
-        data = yf.download(symbol, period="1y", progress=False)
+        # If the data length is less than 2, we cannot calculate percentage change
+        if data.empty or len(data) < 2:
+            return {"error": "Not enough data to calculate percentage change."}
 
-        # Calculate price changes
+        # Calculate RSI
         delta = data["Close"].diff()
-
-        # Gains and losses
         up = delta.clip(lower=0)
         down = -delta.clip(upper=0)
-
-        # Averages in period of 14 days
         avg_up = up.rolling(14).mean()
         avg_down = down.rolling(14).mean()
-
-        # RSI calculation
         rs = avg_up / avg_down
         rsi = 100 - (100 / (1 + rs))
 
-        rsi_value = float(rsi.iloc[-1])
+        # Get the latest RSI value using the recommended approach
+        rsi_value = None if rsi.empty else float(rsi.iloc[-1])
 
-        # Return structured data
+        if rsi_value is None:
+            return {"error": "Unable to calculate RSI. Data may be insufficient."}
+
+        # Calculate percentage change if there's enough data
+        previous_close = float(data["Close"].iloc[-2])  # Previous day's closing price
+        current_close = float(data["Close"].iloc[-1])  # Today's closing price
+
+        # Percentage change calculation
+        def calculate_percentage_change(current_price, previous_price):
+            return ((current_price - previous_price) / previous_price) * 100
+
+        percentage_change = calculate_percentage_change(current_close, previous_close)
+
+        # Return the data in the requested format with proper float conversions
         return {
-            "price": quote["c"],  # Current price
-            "high": quote["h"],  # Daily high
-            "low": quote["l"],  # Daily low
-            "change": quote["d"],  # Price change
-            "rsi": rsi_value,
+            "price": round(float(data["Close"].iloc[-1]), 2),
+            "high": round(float(data["High"].iloc[-1]), 2),
+            "low": round(float(data["Low"].iloc[-1]), 2),
+            "change": round(float(data["Close"].iloc[-1] - data["Open"].iloc[-1]), 2),
+            "percentage_change": round(percentage_change, 2),
+            "rsi": round(rsi_value, 2),
         }
 
     except Exception as e:
@@ -75,13 +73,13 @@ def get_stock_data(symbol):
         return None
 
 
-def merge_stock_data(reddit_analysis):
+def merge_stock_data(reddit_analysis: dict) -> dict:
     """
-    Merges Reddit sentiment analysis with stock data from Finnhub API and calculates the RSI using yfinance.
+    Merges Reddit sentiment analysis with stock data using yfinance.
 
     Parameters:
         reddit_analysis (dict): A dictionary containing the sentiment analysis results, structured as follows:
-            {
+            subreddit: {
                 "top_stocks": [...],
                 "worst_stocks": [...],
                 "rising_stocks": [...]
@@ -89,7 +87,7 @@ def merge_stock_data(reddit_analysis):
 
     Returns:
         dict: Structured data containing the sentiment analysis results merged with the stock data, structured as follows:
-            {
+            subreddit: {
                 "top_stocks": [...],
                 "worst_stocks": [...],
                 "rising_stocks": [...]
@@ -112,30 +110,9 @@ def merge_stock_data(reddit_analysis):
                         "high": stock_data["high"],
                         "low": stock_data["low"],
                         "change": stock_data["change"],
+                        "percentage_change": stock_data["percentage_change"],
                         "rsi": stock_data["rsi"],
                     }
                 )
 
     return enriched_data
-
-
-def display_stock_analysis(merged_data):
-    """
-    Returns the merged stock analysis data in a structured format.
-
-    Parameters:
-        merged_data (dict): Structured data containing the sentiment analysis results merged with the stock data, structured as follows:
-            {
-                "top_stocks": [...],
-                "worst_stocks": [...],
-                "rising_stocks": [...]
-            }
-
-    Returns:
-        dict: A dictionary containing DataFrames for each category.
-    """
-    dataframes = {}
-    for category, stocks in merged_data.items():
-        df = pd.DataFrame(stocks)
-        dataframes[category] = df
-    return dataframes

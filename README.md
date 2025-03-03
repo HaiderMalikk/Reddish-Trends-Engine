@@ -7,8 +7,9 @@
 <img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
-## Current Version √A is the first version of the Altharion engine, so far the reddit analysis has been completed, it can anylize any subreddit and output the best, worst and trending stocks from the subreddit this is then fed to market analizers that get the price, high, low, rsi etc for those stocks in the sentiment analysis, the results are outputed to the user. The first version while humble is sure to deliver unique and amazing stock recomendations.
-- test run of the sentiment + market analysis, resulting is a table of values.
+## Altharion Engine: Mining Reddit for Financial Trends
+**Description**:  
+The Altharion Engine's first version √A specializes in analyzing financial, stock, and crypto-related subreddits to uncover the best, worst, and most trending stocks. By diving into the conversations and sentiment of these communities, it identifies stock discussions that are gaining traction and feeds them into market analyzers for detailed financial data such as price, high, low, and RSI. With a focus on the power of Reddit’s financial chatter, Altharion delivers insightful stock recommendations based on real-world community sentiment. It’s the ultimate tool to track and capitalize on the pulse of online financial discussions.
 
 <img src="./assets/test_table.png" alt="Home" width="400"/>
 
@@ -23,7 +24,7 @@ Altharion is the backend system powering TradeSenseAI, a hybrid stock prediction
 
 ## 🏗️ Tech Stack  
 - **Backend:** Flask, Python, Jupyter Notebook, Pytest, Pandas
-- **Machine Learning:** scikit-learn, TensorFlow, Pandas, Numpy, OpenCV, Pytorch, OpenAI GPT API
+- **Machine Learning:** scikit-learn, TensorFlow, Pandas, Numpy, OpenCV, Pytorch, OpenAI GPT API (coming soon)
 - **Databases:** Firebase
 - **APIs Used:** Yahoo Finance API, Finhub, Twitter/X API, Reddit API, Google Trends API
 - **Hosting:** Heroku

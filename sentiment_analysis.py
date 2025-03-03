@@ -99,7 +99,7 @@ reddit = praw.Reddit(
 print(f"✅ Authenticated as: {reddit.user.me()}\n")
 
 
-def get_reddit_posts(subreddit, limit):
+def get_reddit_posts(subreddit: str, limit: int) -> list:
     """
     Fetch posts and comments from a specified subreddit.
 
@@ -122,7 +122,7 @@ def get_reddit_posts(subreddit, limit):
 analyzer = SentimentIntensityAnalyzer()
 
 
-def analyze_sentiment(text):
+def analyze_sentiment(text: str) -> float:
     """
     Analyze sentiment of a given text.
 
@@ -137,7 +137,7 @@ def analyze_sentiment(text):
     ]  # Ranges from -1 (negative) to +1 (positive)
 
 
-def normalize_score(score):
+def normalize_score(score: float) -> float:
     """
     Boosts sentiment scores to improve ranking impact.
 
@@ -150,7 +150,7 @@ def normalize_score(score):
     return score * 10 if score > 0 or score < 0 else 0
 
 
-def extract_stock_mentions(posts):
+def extract_stock_mentions(posts: list) -> dict:
     """
     Extracts stock tickers like $TSLA, $AAPL and tracks their sentiment
 
@@ -182,7 +182,7 @@ def extract_stock_mentions(posts):
     return stock_mentions
 
 
-def classify_stocks(subreddit, limit):
+def classify_stocks(subreddit: str, limit: int) -> dict:
     """
     Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
 
@@ -216,7 +216,7 @@ def classify_stocks(subreddit, limit):
     }
 
 
-def get_stock_analysis(stock, subreddit, limit):
+def get_stock_analysis(stock: str, subreddit: str, limit: int) -> str:
     """
     Returns sentiment and mentions for a specific stock.
 
@@ -239,7 +239,7 @@ def get_stock_analysis(stock, subreddit, limit):
 
 
 # Main functions for general and specific analysis
-def general_reddit_analysis(subreddit, limit):
+def general_reddit_analysis(subreddit: str, limit: int) -> dict:
     """
     Perform general stock analysis for a subreddit.
 
@@ -253,7 +253,7 @@ def general_reddit_analysis(subreddit, limit):
     return classify_stocks(subreddit, limit)
 
 
-def specific_stock_analysis(subreddit, stock, limit):
+def specific_stock_analysis(subreddit: str, stock: str, limit: int) -> dict:
     """
     Perform specific stock analysis for a subreddit.
 

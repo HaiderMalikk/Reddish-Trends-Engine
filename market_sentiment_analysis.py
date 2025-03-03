@@ -13,12 +13,12 @@ the analysis.
 """
 
 from sentiment_analysis import general_reddit_analysis
-from market_analysis import merge_stock_data, display_stock_analysis
+from market_analysis import merge_stock_data
 import concurrent.futures
 from yaspin import yaspin  # using yaspin for spinne
 
 
-def stock_and_social_analysis(subreddit, limit):
+def stock_and_social_analysis(subreddit: str, limit: int) -> dict:
     """
     Perform general Reddit analysis for a subreddit and a financial analysis from those results.
 
@@ -31,33 +31,30 @@ def stock_and_social_analysis(subreddit, limit):
     """
     general_analysis = general_reddit_analysis(subreddit, limit)
     financial_data = merge_stock_data(general_analysis)
-    dataframes = display_stock_analysis(financial_data)
 
-    return {
-        "subreddit": subreddit,
-        "dataframes": dataframes,
-    }
+    return {subreddit: financial_data}
 
 
-def sentiment_analysis():
+def sentiment_analysis() -> list:
     """
-    Run sentiment analysis on the given list of subreddits and print the results.
-    then print the stock analysis in a structured format.
+    Run sentiment analysis on the given list of subreddits and return the results.
 
     Parameters:
         None
 
     Returns:
-        None
+        list: A list of dictionaries containing the analysis results for each subreddit.
     """
     subreddits = [
         "wallstreetbets",
         "stocks",
+        "StocksAndTrading",
     ]  # List of subreddits to analyze
     limit = 10  # Maximum number of posts to retrieve
 
     results = []
 
+    # Run sentiment analysis in parallel on each subreddit
     with concurrent.futures.ThreadPoolExecutor() as executor:
         with yaspin(
             text="📈 Sentiment Analysis in progress...", color="red"
@@ -73,13 +70,7 @@ def sentiment_analysis():
             spinner.text = "✅ Sentiment Analysis completed!"
             spinner.ok()
 
-    # Print all results
-    for result in results:
-        print(f"📊 {result['subreddit']} Subreddit Analysis + Market Analysis")
-        for category, df in result["dataframes"].items():
-            print(f"\n📊 {category.capitalize().replace('_', ' ')}:\n")
-            print(df)
-        print("✅ Analysis completed!\n")
+    return results
 
 
-sentiment_analysis()  # Run the sentiment analysis
+print(sentiment_analysis())  # Run the sentiment analysis
