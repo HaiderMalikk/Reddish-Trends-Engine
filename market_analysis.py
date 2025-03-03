@@ -6,21 +6,20 @@ the analysis.
 
 - it first fetches the stock data using the get_stock_data function from the market_analysis module.
 - it then merges the Reddit sentiment analysis with the stock data using the merge_stock_data function.
-- it finally displays the stock analysis in a structured format using the display_stock_analysis function.
 
-- for the stock data, it fetches the stock price, etc etc from the yfinance module.\
+- for the stock data, it fetches the stock price, etc etc from the yfinance module.
 """
 
 import yfinance as yf
 
 
-def get_stock_data(symbol: str, period: str = "1mo") -> dict | None:
+def get_stock_data(symbol: str, period: str) -> dict | None:
     """
     Fetches stock data for a given symbol using yfinance and calculates the RSI value.
 
     Parameters:
         symbol (str): The stock symbol to fetch data for.
-        period (str): The period for which to fetch data. Defaults to "1mo".
+        period (str): The period for which to fetch data.
 
     Returns:
         dict | None: A dictionary containing the current price, daily high, daily low, price change, and RSI value. If unable to fetch data, returns None.
@@ -73,7 +72,7 @@ def get_stock_data(symbol: str, period: str = "1mo") -> dict | None:
         return None
 
 
-def merge_stock_data(reddit_analysis: dict) -> dict:
+def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
     """
     Merges Reddit sentiment analysis with stock data using yfinance.
 
@@ -84,6 +83,8 @@ def merge_stock_data(reddit_analysis: dict) -> dict:
                 "worst_stocks": [...],
                 "rising_stocks": [...]
             }
+        period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max".
+        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         dict: Structured data containing the sentiment analysis results merged with the stock data, structured as follows:
@@ -100,7 +101,7 @@ def merge_stock_data(reddit_analysis: dict) -> dict:
 
         for stock, details in stocks:
             stock_symbol = stock.replace("$", "")  # Remove $ sign from symbol
-            if stock_data := get_stock_data(stock_symbol):
+            if stock_data := get_stock_data(stock_symbol, period):
                 enriched_data[category].append(
                     {
                         "symbol": stock,
