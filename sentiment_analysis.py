@@ -6,43 +6,39 @@ It uses the PRAW (Python Reddit API Wrapper) to fetch data from Reddit and the V
 
 Steps to get to the final output:
 
-1. **Environment Setup**:
-    - Load environment variables from a `.env` file using `dotenv`.
-    - Retrieve API keys and credentials for OpenAI and Reddit from the environment variables.
-
-2. **API Client Initialization**:
+1. **API Client Initialization**:
     - Initialize the OpenAI client using the OpenAI API key.
     - Authenticate with the Reddit API using the credentials and create a Reddit client.
 
-3. **Fetch Reddit Posts**:
+2. **Fetch Reddit Posts**:
     - Define a function `get_reddit_posts` to fetch posts and comments from a specified subreddit.
     - The function retrieves the titles, selftexts, and comments of the fetched posts.
 
-4. **Sentiment Analysis**:
+3. **Sentiment Analysis**:
     - Initialize the VADER sentiment analyzer.
     - Define a function `analyze_sentiment` to analyze the sentiment of a given text.
     - The function returns a sentiment score ranging from -1 (negative) to +1 (positive).
 
-5. **Normalize Sentiment Scores**:
+4. **Normalize Sentiment Scores**:
     - Define a function `normalize_score` to boost sentiment scores to improve ranking impact.
     - The function amplifies positive and negative scores.
 
-6. **Extract Stock Mentions**:
+5. **Extract Stock Mentions**:
     - Define a function `extract_stock_mentions` to extract stock tickers (e.g., $TSLA, $AAPL) from the posts and track their sentiment.
     - The function uses regular expressions to find stock tickers and calculates the average sentiment for each stock.
 
-7. **Classify Stocks**:
+6. **Classify Stocks**:
     - Define a function `classify_stocks` to classify stocks mentioned in a subreddit's posts based on sentiment analysis.
     - The function returns a dictionary containing lists of stocks classified into three categories:
         - "top_stocks": The top 5 stocks with the highest sentiment scores.
         - "worst_stocks": The bottom 5 stocks with the lowest sentiment scores.
         - "rising_stocks": Stocks with sentiment scores above 0.5, indicating positive sentiment.
 
-8. **Specific Stock Analysis**:
-    - Define a function `get_stock_analysis` to return sentiment and mentions for a specific stock.
+7. **Specific Stock Analysis**:
+    - Define a function `specific_stock_analysis` to return sentiment and mentions for a specific stock.
     - The function retrieves posts from a subreddit, extracts stock mentions, and returns a formatted string containing the stock's sentiment and mention counts.
 
-9. **General Reddit Analysis**:
+8. **General Reddit Analysis**:
     - Define a function `general_reddit_analysis` to perform general stock analysis for a subreddit.
     - The function analyzes the subreddit and returns the results.
 
@@ -206,8 +202,8 @@ def classify_stocks(subreddit: str, limit: int) -> dict:
 
     # Split into top, worst, and rising stocks, split the limit in half as thats the number of posts we have i.e potential stocks we have
     # since the stocks are sorted by sentiment we can just split the list in half and take the top and bottom as the top and worst stocks
-    top_stocks = sorted_stocks[:limit//2]
-    worst_stocks = sorted_stocks[-limit//2:]
+    top_stocks = sorted_stocks[: limit // 2]
+    worst_stocks = sorted_stocks[-limit // 2 :]
     rising_stocks = [
         s for s in sorted_stocks if s[1]["sentiment"] > 0.5
     ]  # Positive sentiment threshold
@@ -219,12 +215,12 @@ def classify_stocks(subreddit: str, limit: int) -> dict:
     }
 
 
-def get_stock_analysis(stock: str, subreddit: str, limit: int) -> str:
+def get_stock_analysis(stock: str, subreddit: str, limit: int) -> dict:
     """
     Returns sentiment and mentions for a specific stock.
 
     Parameters:
-        stock (str): The stock symbol to analyze.
+        stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
         subreddit (str): The name of the subreddit to analyze.
         limit (int): The maximum number of posts to retrieve.
 
@@ -235,10 +231,14 @@ def get_stock_analysis(stock: str, subreddit: str, limit: int) -> str:
     stock_data = extract_stock_mentions(posts)
 
     if stock not in stock_data:
-        return f"⚠️ No significant data available for {stock}."
+        return {"specific_stock": [(stock, {"count": 0, "sentiment": 0})]}
 
     data = stock_data[stock]
-    return f"📊 {stock} Analysis\nMentions: {data['count']}\nSentiment: {data['sentiment']}"
+    return {
+        "specific_stock": [
+            (stock, {"count": data["count"], "sentiment": data["sentiment"]})
+        ]
+    }
 
 
 # Main functions for general and specific analysis
@@ -262,7 +262,7 @@ def specific_stock_analysis(subreddit: str, stock: str, limit: int) -> dict:
 
     Parameters:
         subreddit (str): The name of the subreddit to analyze.
-        stock (str): The stock symbol to analyze.
+        stock (str): The stock symbol to analyze. must be in the format TSLA
         limit (int): The maximum number of posts to retrieve.
 
     Returns:

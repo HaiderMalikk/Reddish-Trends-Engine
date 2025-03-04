@@ -13,6 +13,7 @@ the analysis.
 import yfinance as yf
 
 
+# TODO: fix the <14d issue with RSI calculation leading to null values for everything, perhaphs take it away and default tot 1mo
 def get_stock_data(symbol: str, period: str) -> dict:
     """
     Fetches stock data for a given symbol using yfinance and calculates the RSI value.
@@ -22,7 +23,7 @@ def get_stock_data(symbol: str, period: str) -> dict:
         period (str): The period for which to fetch data.
 
     Returns:
-        dict A dictionary containing the current price, daily high, daily low, price change, and RSI value. 
+        dict A dictionary containing the current price, daily high, daily low, price change, and RSI value.
         If unable to fetch data, returns an error message.
     """
     try:
@@ -31,7 +32,9 @@ def get_stock_data(symbol: str, period: str) -> dict:
 
         # If the data length is less than 2, we cannot calculate percentage change
         if data.empty or len(data) < 2:
-            return {"error": f"${symbol}: possibly delisted; no price data found (period={period})"}
+            return {
+                "error": f"${symbol}: possibly delisted; no price data found (period={period})"
+            }
 
         # Calculate RSI
         delta = data["Close"].diff()
@@ -43,10 +46,7 @@ def get_stock_data(symbol: str, period: str) -> dict:
         rsi = 100 - (100 / (1 + rs))
 
         # Get the latest RSI value using the recommended approach
-        rsi_value = None if rsi.empty else float(rsi.iloc[-1])
-
-        if rsi_value is None:
-            return {"error": "Unable to calculate RSI. Data may be insufficient."}
+        rsi_value = 0 if rsi.empty else float(rsi.iloc[-1])
 
         # Calculate percentage change if there's enough data
         previous_close = float(data["Close"].iloc[-2])  # Previous day's closing price
@@ -58,7 +58,7 @@ def get_stock_data(symbol: str, period: str) -> dict:
 
         percentage_change = calculate_percentage_change(current_close, previous_close)
 
-        # Return the data in the requested format with proper float conversions
+        # Return the data in the requested format with proper float conversions using the latest data
         return {
             "price": round(float(data["Close"].iloc[-1]), 2),
             "high": round(float(data["High"].iloc[-1]), 2),
@@ -68,8 +68,10 @@ def get_stock_data(symbol: str, period: str) -> dict:
             "rsi": round(rsi_value, 2),
         }
 
-    except Exception as e:
-        error_msg = f"${symbol}: possibly delisted; no price data found (period={period})"
+    except Exception:
+        error_msg = (
+            f"${symbol}: possibly delisted; no price data found (period={period})"
+        )
         print(error_msg)
         return {"error": error_msg}
 
@@ -79,22 +81,12 @@ def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
     Merges Reddit sentiment analysis with stock data using yfinance.
 
     Parameters:
-        reddit_analysis (dict): A dictionary containing the sentiment analysis results, structured as follows:
-            subreddit: {
-                "top_stocks": [...],
-                "worst_stocks": [...],
-                "rising_stocks": [...]
-            }
+        reddit_analysis (dict): A dictionary containing the sentiment analysis results.
         period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max".
         NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         dict: Structured data containing the sentiment analysis results merged with the stock data, structured as follows:
-            subreddit: {
-                "top_stocks": [...],
-                "worst_stocks": [...],
-                "rising_stocks": [...]
-            }
     """
     enriched_data = {}
 
@@ -104,33 +96,37 @@ def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
         for stock, details in stocks:
             stock_symbol = stock.replace("$", "")  # Remove $ sign from symbol
             stock_data = get_stock_data(stock_symbol, period)
-            
+
             if "error" in stock_data:
                 # Handle the case where no data is found or stock is delisted
-                enriched_data[category].append({
-                    "symbol": stock,
-                    "count": details["count"],
-                    "sentiment": details["sentiment"],
-                    "price": None,
-                    "high": None,
-                    "low": None,
-                    "change": None,
-                    "percentage_change": None,
-                    "rsi": None,
-                    "error": stock_data["error"]
-                })
+                enriched_data[category].append(
+                    {
+                        "symbol": stock,
+                        "count": details["count"],
+                        "sentiment": details["sentiment"],
+                        "price": None,
+                        "high": None,
+                        "low": None,
+                        "change": None,
+                        "percentage_change": None,
+                        "rsi": None,
+                        "error": stock_data["error"],
+                    }
+                )
             else:
                 # Normal case with successful data retrieval
-                enriched_data[category].append({
-                    "symbol": stock,
-                    "count": details["count"],
-                    "sentiment": details["sentiment"],
-                    "price": stock_data["price"],
-                    "high": stock_data["high"],
-                    "low": stock_data["low"],
-                    "change": stock_data["change"],
-                    "percentage_change": stock_data["percentage_change"],
-                    "rsi": stock_data["rsi"]
-                })
+                enriched_data[category].append(
+                    {
+                        "symbol": stock,
+                        "count": details["count"],
+                        "sentiment": details["sentiment"],
+                        "price": stock_data["price"],
+                        "high": stock_data["high"],
+                        "low": stock_data["low"],
+                        "change": stock_data["change"],
+                        "percentage_change": stock_data["percentage_change"],
+                        "rsi": stock_data["rsi"],
+                    }
+                )
 
     return enriched_data
