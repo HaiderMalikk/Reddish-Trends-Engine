@@ -39,7 +39,7 @@ def stock_and_social_analysis(
     return {subreddit: financial_data}
 
 
-def sentiment_analysis(
+def run_analysis(
     subreddits: list, limit: int = 10, stock_data_period: str = "1mo"
 ) -> list[dict]:
     """
@@ -59,8 +59,8 @@ def sentiment_analysis(
     # Run sentiment analysis in parallel on each subreddit
     with concurrent.futures.ThreadPoolExecutor() as executor:
         with yaspin(
-            text="📈 Sentiment Analysis in progress...", color="red"
-        ) as spinner:
+                    text="📈 Sentiment Analysis in progress...", color="red"
+                ) as spinner:
             futures = []
             futures.extend(
                 executor.submit(
@@ -68,9 +68,7 @@ def sentiment_analysis(
                 )
                 for subreddit in subreddits
             )
-            for future in futures:
-                results.append(future.result())  # Collect results
-
+            results.extend(future.result() for future in futures)
             spinner.text = "✅ Sentiment Analysis completed!"
             spinner.ok()
 

@@ -1,13 +1,13 @@
 # simple flask test app
 from flask import Flask
-from market_sentiment_analysis import sentiment_analysis
+from market_sentiment_analysis import run_analysis
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def hello():
-    analysis = sentiment_analysis(
+    analysis = run_analysis(
         subreddits=[
             "wallstreetbets",
             "stocks",

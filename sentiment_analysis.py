@@ -199,12 +199,15 @@ def classify_stocks(subreddit: str, limit: int) -> dict:
     posts = get_reddit_posts(subreddit, limit)
     sentiment_data = extract_stock_mentions(posts)
 
+    # Sort stocks by sentiment
     sorted_stocks = sorted(
         sentiment_data.items(), key=lambda x: x[1]["sentiment"], reverse=True
     )
 
-    top_stocks = sorted_stocks[:5]
-    worst_stocks = sorted_stocks[-5:]
+    # Split into top, worst, and rising stocks, split the limit in half as thats the number of posts we have i.e potential stocks we have
+    # since the stocks are sorted by sentiment we can just split the list in half and take the top and bottom as the top and worst stocks
+    top_stocks = sorted_stocks[:limit//2]
+    worst_stocks = sorted_stocks[-limit//2:]
     rising_stocks = [
         s for s in sorted_stocks if s[1]["sentiment"] > 0.5
     ]  # Positive sentiment threshold
