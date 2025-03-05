@@ -69,7 +69,7 @@ def get_stock_data(symbol: str) -> dict:
 
     except Exception:
         error_msg = (
-            f"${symbol}: possibly delisted; no price data found (period={period})"
+            f"${symbol}: possibly delisted; part of or all data missing (period={period})"
         )
         print(error_msg)
         return {"error": error_msg}
