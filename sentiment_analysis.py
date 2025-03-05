@@ -230,6 +230,7 @@ def get_stock_analysis(stock: str, subreddit: str, limit: int) -> dict:
     posts = get_reddit_posts(subreddit, limit)
     stock_data = extract_stock_mentions(posts)
 
+    # TODO the market still analyzes the stock but if not enough info then send a error as one of the values to check once have results to tell user no data found (inc the limit)
     if stock not in stock_data:
         return {"specific_stock": [(stock, {"count": 0, "sentiment": 0})]}
 

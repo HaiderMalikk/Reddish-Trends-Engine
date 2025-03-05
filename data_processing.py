@@ -26,8 +26,6 @@ But OPEN has a higher sentiment of 9.957 but since it only appears 1 time in the
 But still is a rising stock because it has the highest
 """
 
-from market_sentiment_analysis import run_general_analysis, run_specific_stock_analysis
-
 
 def get_top_stock(analysis: list[dict]) -> dict | None:
     """

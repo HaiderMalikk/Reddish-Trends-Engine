@@ -5,7 +5,7 @@ specific_stock_analysis functions from the reddit_analysis module to perform
 the analysis.
 
 - It uses the concurrent.futures module to run the analysis functions in parallel.
-- This reduces the time for 2 10 post reddit analysis from 50 seconds to 30 seconds.
+- This reduces the time for 2 10 post reddit analysis from 50 seconds to 30 seconds as they dont run one after the other.
 - each new subreddit analysis for 10 post will take a max of 30 seconds no matter how many subreddits are added.
 
 - it also uses yaspin for spinner to show the progress of the analysis.
