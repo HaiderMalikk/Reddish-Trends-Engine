@@ -27,7 +27,7 @@ Steps to get to the final output:
     - Define a function `extract_stock_mentions` to extract stock tickers (e.g., $TSLA, $AAPL) from the posts and track their sentiment.
     - The function uses regular expressions to find stock tickers and calculates the average sentiment for each stock.
 
-6. **Classify Stocks**:
+6. **get reddit analysis**:
     - Define a function `classify_stocks` to classify stocks mentioned in a subreddit's posts based on sentiment analysis.
     - The function returns a dictionary containing lists of stocks classified into three categories:
         - "top_stocks": The top 5 stocks with the highest sentiment scores.
@@ -71,7 +71,7 @@ from vaderSentiment.vaderSentiment import (
 from collections import defaultdict  # For tracking stock mentions
 import re  # For getting stock name from post and coverting to ticker
 
-print("🛑 Authenticating")
+print("🛑 Authenticating Reddit API")
 
 load_dotenv()
 
@@ -154,7 +154,7 @@ def extract_stock_mentions(posts: list) -> dict:
         posts (list): A list of strings containing the text of the posts to analyze.
 
     Returns:
-        dict: A dictionary containing the stock symbols and their associated sentiment scores.
+        dict: A dictionary containing the stock symbols and their associated sentiment scores along with the actual post used for analysis.
     """
     # Track stock mentions using a dictionary with a count a and list of sentiment scores, def inside function to reset each time
     stock_mentions = defaultdict(
@@ -167,6 +167,7 @@ def extract_stock_mentions(posts: list) -> dict:
         for stock in matches:
             stock_mentions[stock]["count"] += 1
             stock_mentions[stock]["sentiment"].append(sentiment)
+            stock_mentions[stock]["post"] = post
 
     # Calculate average sentiment per stock
     for stock in stock_mentions:
@@ -178,9 +179,9 @@ def extract_stock_mentions(posts: list) -> dict:
     return stock_mentions
 
 
-def classify_stocks(subreddit: str, limit: int) -> dict:
+def get_reddit_analysis(subreddit: str, limit: int) -> dict:
     """
-    Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
+    gets and Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
 
     Parameters:
         subreddit (str): The name of the subreddit to analyze.
@@ -230,14 +231,20 @@ def get_stock_analysis(stock: str, subreddit: str, limit: int) -> dict:
     posts = get_reddit_posts(subreddit, limit)
     stock_data = extract_stock_mentions(posts)
 
-    # TODO the market still analyzes the stock but if not enough info then send a error as one of the values to check once have results to tell user no data found (inc the limit)
     if stock not in stock_data:
-        return {"specific_stock": [(stock, {"count": 0, "sentiment": 0})]}
+        return {"specific_stock": None}
 
     data = stock_data[stock]
     return {
         "specific_stock": [
-            (stock, {"count": data["count"], "sentiment": data["sentiment"]})
+            (
+                stock,
+                {
+                    "count": data["count"],
+                    "sentiment": data["sentiment"],
+                    "post": data["post"],
+                },
+            )
         ]
     }
 
@@ -254,7 +261,7 @@ def general_reddit_analysis(subreddit: str, limit: int) -> dict:
     Returns:
         dict: A dictionary containing the general stock analysis for the subreddit.
     """
-    return classify_stocks(subreddit, limit)
+    return get_reddit_analysis(subreddit, limit)
 
 
 def specific_stock_analysis(subreddit: str, stock: str, limit: int) -> dict:

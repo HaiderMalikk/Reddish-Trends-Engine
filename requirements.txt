@@ -13,3 +13,4 @@ pandas
 tqdm
 yaspin
 finnhub-python
+flask_cors

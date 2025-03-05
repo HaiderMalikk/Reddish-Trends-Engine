@@ -18,30 +18,24 @@ import concurrent.futures
 from yaspin import yaspin  # using yaspin for spinne
 
 
-def general_stock_and_social_analysis(
-    subreddit: str, limit: int, stock_data_period: str
-) -> dict:
+def general_stock_and_social_analysis(subreddit: str, limit: int) -> dict:
     """
     Perform general Reddit analysis for a subreddit and a financial analysis from those results.
 
     Parameters:
         subreddit (str): The name of the subreddit to analyze.
         limit (int): The maximum number of posts to retrieve.
-        stock_data_period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max".
-        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         dict: A dictionary containing the analysis results for the subreddit.
     """
     general_analysis = general_reddit_analysis(subreddit, limit)
-    financial_data = merge_stock_data(general_analysis, stock_data_period)
+    financial_data = merge_stock_data(general_analysis)
 
     return {subreddit: financial_data}
 
 
-def specific_stock_and_social_analysis(
-    subreddit: str, stock: str, limit: int, stock_data_period: str
-) -> dict:
+def specific_stock_and_social_analysis(subreddit: str, stock: str, limit: int) -> dict:
     """
     Perform specific stock analysis for a subreddit and a financial analysis from those results.
 
@@ -49,29 +43,24 @@ def specific_stock_and_social_analysis(
         subreddit (str): The name of the subreddit to analyze.
         stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
         limit (int): The maximum number of posts to retrieve.
-        stock_data_period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max".
-        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         dict: A dictionary containing the analysis results for the subreddit.
     """
     specific_analysis = specific_stock_analysis(subreddit, stock, limit)
-    financial_data = merge_stock_data(specific_analysis, stock_data_period)
+
+    financial_data = merge_stock_data(specific_analysis)
 
     return {subreddit: financial_data}
 
 
-def run_general_analysis(
-    subreddits: list, limit: int = 10, stock_data_period: str = "1mo"
-) -> list[dict]:
+def run_general_analysis(subreddits: list, limit: int = 10) -> list[dict]:
     """
     Perform sentiment analysis on a list of subreddits for all stocks.
 
     Parameters:
         subreddits (list): A list of subreddit names to analyze.
         limit (int): The maximum number of posts to retrieve for each subreddit. Defaults to 10.
-        stock_data_period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max". Defaults to "1mo".
-        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         list[dict]: A list containing a dictionary for each subreddit, with the analysis results for that subreddit.
@@ -89,7 +78,6 @@ def run_general_analysis(
                     general_stock_and_social_analysis,
                     subreddit,
                     limit,
-                    stock_data_period,
                 )
                 for subreddit in subreddits
             )
@@ -101,7 +89,7 @@ def run_general_analysis(
 
 
 def run_specific_stock_analysis(
-    subreddits: list, stock: str, limit: int = 10, stock_data_period: str = "1mo"
+    subreddits: list, stock: str, limit: int = 10
 ) -> list[dict]:
     """
     Perform sentiment analysis on a list of subreddits for a specific stock.
@@ -110,8 +98,6 @@ def run_specific_stock_analysis(
         subreddits (list): A list of subreddit names to analyze.
         stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
         limit (int): The maximum number of posts to retrieve for each subreddit. Defaults to 10.
-        stock_data_period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max". Defaults to "1mo".
-        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         list[dict]: A list containing a dictionary for each subreddit, with the analysis results in that subreddit for a specific stock.
@@ -130,7 +116,6 @@ def run_specific_stock_analysis(
                     subreddit,
                     stock,
                     limit,
-                    stock_data_period,
                 )
                 for subreddit in subreddits
             )

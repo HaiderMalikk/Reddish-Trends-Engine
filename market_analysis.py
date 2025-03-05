@@ -13,14 +13,12 @@ the analysis.
 import yfinance as yf
 
 
-# TODO: fix the <14d issue with RSI calculation leading to null values for everything, perhaphs take it away and default tot 1mo
-def get_stock_data(symbol: str, period: str) -> dict:
+def get_stock_data(symbol: str) -> dict:
     """
     Fetches stock data for a given symbol using yfinance and calculates the RSI value.
 
     Parameters:
         symbol (str): The stock symbol to fetch data for.
-        period (str): The period for which to fetch data.
 
     Returns:
         dict A dictionary containing the current price, daily high, daily low, price change, and RSI value.
@@ -28,6 +26,7 @@ def get_stock_data(symbol: str, period: str) -> dict:
     """
     try:
         # Fetch stock data using yfinance
+        period = "1mo"  # Default period for fetching stock data neede for RSI
         data = yf.download(symbol, period=period, progress=False)
 
         # If the data length is less than 2, we cannot calculate percentage change
@@ -76,14 +75,12 @@ def get_stock_data(symbol: str, period: str) -> dict:
         return {"error": error_msg}
 
 
-def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
+def merge_stock_data(reddit_analysis: dict) -> dict:
     """
     Merges Reddit sentiment analysis with stock data using yfinance.
 
     Parameters:
         reddit_analysis (dict): A dictionary containing the sentiment analysis results.
-        period (str): The period for which to fetch stock data. valid values are "1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max".
-        NOTE: the rsi value is calculated using a 14-day period. if the period is less than 14 days, the rsi value will not be calculated.
 
     Returns:
         dict: Structured data containing the sentiment analysis results merged with the stock data, structured as follows:
@@ -91,11 +88,15 @@ def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
     enriched_data = {}
 
     for category, stocks in reddit_analysis.items():
+        # if no data on specific stock was found skip it
+        if stocks is None:
+            continue
+
         enriched_data[category] = []
 
         for stock, details in stocks:
             stock_symbol = stock.replace("$", "")  # Remove $ sign from symbol
-            stock_data = get_stock_data(stock_symbol, period)
+            stock_data = get_stock_data(stock_symbol)
 
             if "error" in stock_data:
                 # Handle the case where no data is found or stock is delisted
@@ -104,6 +105,7 @@ def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
                         "symbol": stock,
                         "count": details["count"],
                         "sentiment": details["sentiment"],
+                        "post": details["post"],
                         "price": None,
                         "high": None,
                         "low": None,
@@ -120,6 +122,7 @@ def merge_stock_data(reddit_analysis: dict, period: str) -> dict:
                         "symbol": stock,
                         "count": details["count"],
                         "sentiment": details["sentiment"],
+                        "post": details["post"],
                         "price": stock_data["price"],
                         "high": stock_data["high"],
                         "low": stock_data["low"],
