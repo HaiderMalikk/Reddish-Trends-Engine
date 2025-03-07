@@ -45,6 +45,7 @@ def analyze_stock_data_with_gpt(stock_data):
                     '  "technical_analysis": "Stock trend insights.",\n'
                     '  "fundamental_analysis": "Financial health insights.",\n'
                     '  "prediction": "Future performance prediction."\n'
+                    '  "Confidence Score": "Confidence level of prediction as a number between 0 and 100."\n'
                     "}"
                 ),
             },

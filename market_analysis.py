@@ -51,7 +51,7 @@ def get_stock_data(symbol: str) -> dict:
         previous_close = float(data["Close"].iloc[-2])  # Previous day's closing price
         current_close = float(data["Close"].iloc[-1])  # Today's closing price
 
-        # Percentage change calculation
+        # Percentage change calculation based on 2 previous days
         def calculate_percentage_change(current_price, previous_price):
             return ((current_price - previous_price) / previous_price) * 100
 
