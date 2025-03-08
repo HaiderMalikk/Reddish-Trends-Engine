@@ -34,6 +34,10 @@ def get_stock_data(symbol: str) -> dict:
             return {
                 "error": f"${symbol}: possibly delisted; no price data found (period={period})"
             }
+        
+        # get company name from the symbol
+        company = yf.Ticker(symbol)
+        company_name = company.info['longName']
 
         # Calculate RSI
         delta = data["Close"].diff()
@@ -59,9 +63,10 @@ def get_stock_data(symbol: str) -> dict:
 
         # Return the data in the requested format with proper float conversions using the latest data
         return {
+            "company_name": company_name,
             "price": round(float(data["Close"].iloc[-1]), 2),
-            "high": round(float(data["High"].iloc[-1]), 2),
-            "low": round(float(data["Low"].iloc[-1]), 2),
+            "high": round(float(data["High"].iloc[-1]), 2), 
+            "low": round(float(data["Low"].iloc[-1]), 2), 
             "change": round(float(data["Close"].iloc[-1] - data["Open"].iloc[-1]), 2),
             "percentage_change": round(percentage_change, 2),
             "rsi": round(rsi_value, 2),
@@ -103,6 +108,7 @@ def merge_stock_data(reddit_analysis: dict) -> dict:
                 enriched_data[category].append(
                     {
                         "symbol": stock,
+                        "company_name": None,
                         "count": details["count"],
                         "sentiment": details["sentiment"],
                         "post": details["post"],
@@ -120,6 +126,7 @@ def merge_stock_data(reddit_analysis: dict) -> dict:
                 enriched_data[category].append(
                     {
                         "symbol": stock,
+                        "company_name": stock_data["company_name"],
                         "count": details["count"],
                         "sentiment": details["sentiment"],
                         "post": details["post"],

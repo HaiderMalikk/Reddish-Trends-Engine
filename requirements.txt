@@ -14,3 +14,4 @@ tqdm
 yaspin
 finnhub-python
 flask_cors
+# TODO: download from github and check that -r works 

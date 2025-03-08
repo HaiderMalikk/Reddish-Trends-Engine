@@ -4,6 +4,7 @@ from flask_cors import CORS
 from market_sentiment_analysis import run_general_analysis, run_specific_stock_analysis
 from data_processing import get_top_stock, get_worst_stock, get_rising_stock
 from gpt_processing import analyze_stock_data_with_gpt
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -21,6 +22,7 @@ def get_analysis():
     if request.method == "POST":
         data = request.get_json()
         print("data=", data)
+        time.sleep(3) # test 
 
         request_type = data["request"]["type"]
         if request_type == "getgeneralanalysis":
@@ -28,6 +30,7 @@ def get_analysis():
                 "response": {
                     "Top Stock": {
                         "symbol": "$COST",
+                        "company_name": "Costco", 
                         "count": 1,
                         "sentiment": 6.369,
                         "post": "Sigma Sigma on the wall",
@@ -36,7 +39,7 @@ def get_analysis():
                         "low": 1019.05,
                         "change": -5.52,
                         "percentage_change": -2.02,
-                        "rsi": 36.08,
+                        "rsi": 26.08,
                         "GPT_Analysis": {
                             "overview": "Costco ($COST) has experienced a slight decline of 2.02% in its stock price, closing at $1026.62 after reaching a high of $1045.89 and a low of $1019.05.",
                             "market_sentiment": "The sentiment score of 6.369 indicates a moderately positive outlook among investors, despite the recent price drop. The post suggests confidence in the market, which may reflect a bullish sentiment overall.",

@@ -35,7 +35,7 @@ def analyze_stock_data_with_gpt(stock_data):
                     "You are an expert financial analyst with deep knowledge of stock and crypto markets. "
                     "You analyze trends, fundamental & technical indicators, and market sentiment. "
                     "You will receive a dictionary of stock data sourced from a subreddit, which may be for best, worst, or rising stocks. "
-                    "The dictionary contains the stock symbol, count, sentiment, post, price, high, low, change, percentage change, and RSI. "
+                    "The dictionary contains the stock symbol, company name, count, sentiment, post, price, high, low, change, percentage change, and RSI. "
                     "Your task is to analyze the data and predict future stock performance with detailed reasoning. "
                     "Base your predictions on technical indicators, fundamentals, market trends, and news sentiment. "
                     "Provide insights **strictly in JSON format** with the following structure:\n\n"
