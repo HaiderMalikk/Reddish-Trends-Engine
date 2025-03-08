@@ -166,7 +166,7 @@ def extract_stock_mentions(posts: list) -> dict:
         sentiment = analyze_sentiment(post)
         for stock in matches:
             stock_mentions[stock]["count"] += 1
-            stock_mentions[stock]["sentiment"].append(sentiment)
+            stock_mentions[stock]["sentiment"].append(round(sentiment, 2))
             stock_mentions[stock]["post"] = post
 
     # Calculate average sentiment per stock

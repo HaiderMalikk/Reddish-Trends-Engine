@@ -4,7 +4,6 @@ praw
 flask
 pytrends
 dotenv
-yahooquery
 requests
 openai
 vaderSentiment

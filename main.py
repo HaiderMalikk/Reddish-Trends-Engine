@@ -4,7 +4,6 @@ from flask_cors import CORS
 from market_sentiment_analysis import run_general_analysis, run_specific_stock_analysis
 from data_processing import get_top_stock, get_worst_stock, get_rising_stock
 from gpt_processing import analyze_stock_data_with_gpt
-import time
 
 app = Flask(__name__)
 CORS(app)
@@ -21,36 +20,103 @@ def get_analysis():
 
     if request.method == "POST":
         data = request.get_json()
-        print("data=", data)
-        time.sleep(3) # test 
-
+        print("data received=", data)
+        subreddits = ["wallstreetbets", "stocks", "stockmarket"]        
+        # Run the general analysis
+        general_analysis = run_general_analysis(subreddits, limit=50)
+        # get the top stock, worst stock and rising stock
+        top_stock = get_top_stock(general_analysis)
+        worst_stock = get_worst_stock(general_analysis)
+        rising_stock = get_rising_stock(general_analysis)[1] # just get the second rising stock to avoid overlap with top stock
+        
+        # Check if stocks are valid dictionaries before analyzing
+        top_gpt_analysis = analyze_stock_data_with_gpt(top_stock) if top_stock else None
+        worst_gpt_analysis = analyze_stock_data_with_gpt(worst_stock) if worst_stock else None
+        rising_gpt_analysis = analyze_stock_data_with_gpt(rising_stock) if rising_stock else None
+        
         request_type = data["request"]["type"]
         if request_type == "getgeneralanalysis":
             response_data = {
-                "response": {
-                    "Top Stock": {
-                        "symbol": "$COST",
-                        "company_name": "Costco", 
-                        "count": 1,
-                        "sentiment": 6.369,
-                        "post": "Sigma Sigma on the wall",
-                        "price": 1026.62,
-                        "high": 1045.89,
-                        "low": 1019.05,
-                        "change": -5.52,
-                        "percentage_change": -2.02,
-                        "rsi": 26.08,
-                        "GPT_Analysis": {
-                            "overview": "Costco ($COST) has experienced a slight decline of 2.02% in its stock price, closing at $1026.62 after reaching a high of $1045.89 and a low of $1019.05.",
-                            "market_sentiment": "The sentiment score of 6.369 indicates a moderately positive outlook among investors, despite the recent price drop. The post suggests confidence in the market, which may reflect a bullish sentiment overall.",
-                            "technical_analysis": "The RSI of 36.08 suggests that the stock is nearing oversold territory (below 30), indicating potential for a rebound. However, the recent downward trend could signal caution for short-term traders.",
-                            "fundamental_analysis": "Costco is generally considered a strong company with solid fundamentals; however, specific financial metrics such as revenue growth, profit margins, and debt levels are not provided in this data. Investors should consider these factors when assessing long-term viability.",
-                            "prediction": "Given the current RSI and market sentiment, there is potential for a short-term recovery in the stock price if buying interest increases. However, caution is advised due to the recent downtrend.",
-                            "Confidence Score": 70,
-                        },
-                    }
-                }
+                "response": {}
             }
+            
+            # Handle top stock data
+            if not top_stock:
+                response_data["response"]["Top_Stock"] = "None"
+            else:
+                response_data["response"]["Top_Stock"] = {
+                    "symbol": top_stock["symbol"],
+                    "company_name": top_stock["company_name"], 
+                    "count": top_stock["count"],
+                    "sentiment": top_stock["sentiment"],
+                    "post": top_stock["post"],
+                    "price": top_stock["price"],
+                    "high": top_stock["high"],
+                    "low": top_stock["low"],
+                    "change": top_stock["change"],
+                    "percentage_change": top_stock["percentage_change"],
+                    "rsi": top_stock["rsi"],
+                    "GPT_Analysis": {
+                        "overview": top_gpt_analysis["overview"],
+                        "market_sentiment": top_gpt_analysis["market_sentiment"],
+                        "technical_analysis": top_gpt_analysis["technical_analysis"],
+                        "fundamental_analysis": top_gpt_analysis["fundamental_analysis"],
+                        "prediction": top_gpt_analysis["prediction"],
+                        "Confidence Score": top_gpt_analysis["Confidence Score"],
+                    },
+                }
+            
+            # Handle worst stock data
+            if not worst_stock:
+                response_data["response"]["Worst_Stock"] = "None"
+            else:
+                response_data["response"]["Worst_Stock"] = {
+                    "symbol": worst_stock["symbol"],
+                    "company_name": worst_stock["company_name"],
+                    "count": worst_stock["count"],
+                    "sentiment": worst_stock["sentiment"],
+                    "post": worst_stock["post"],
+                    "price": worst_stock["price"],
+                    "high": worst_stock["high"],
+                    "low": worst_stock["low"],
+                    "change": worst_stock["change"],
+                    "percentage_change": worst_stock["percentage_change"],
+                    "rsi": worst_stock["rsi"],
+                    "GPT_Analysis": {
+                        "overview": worst_gpt_analysis["overview"],
+                        "market_sentiment": worst_gpt_analysis["market_sentiment"],
+                        "technical_analysis": worst_gpt_analysis["technical_analysis"],
+                        "fundamental_analysis": worst_gpt_analysis["fundamental_analysis"],
+                        "prediction": worst_gpt_analysis["prediction"],
+                        "Confidence Score": worst_gpt_analysis["Confidence Score"],
+                    },
+                }
+            
+            # Handle rising stock data
+            if not rising_stock:
+                response_data["response"]["Rising_Stock"] = "None"
+            else:
+                response_data["response"]["Rising_Stock"] = {
+                    "symbol": rising_stock["symbol"],
+                    "company_name": rising_stock["company_name"],
+                    "count": rising_stock["count"],
+                    "sentiment": rising_stock["sentiment"],
+                    "post": rising_stock["post"],
+                    "price": rising_stock["price"],
+                    "high": rising_stock["high"],
+                    "low": rising_stock["low"],
+                    "change": rising_stock["change"],
+                    "percentage_change": rising_stock["percentage_change"],
+                    "rsi": rising_stock["rsi"],
+                    "GPT_Analysis": {
+                        "overview": rising_gpt_analysis["overview"],
+                        "market_sentiment": rising_gpt_analysis["market_sentiment"],
+                        "technical_analysis": rising_gpt_analysis["technical_analysis"],
+                        "fundamental_analysis": rising_gpt_analysis["fundamental_analysis"],
+                        "prediction": rising_gpt_analysis["prediction"],
+                        "Confidence Score": rising_gpt_analysis["Confidence Score"],
+                    },
+                }
 
     elif request.method == "GET":
         print("GET request received. Returning default response.")

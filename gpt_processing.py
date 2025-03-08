@@ -51,7 +51,7 @@ def analyze_stock_data_with_gpt(stock_data):
             },
             {
                 "role": "user",
-                "content": f"Here is the stock data in JSON format: {json.dumps(stock_data)}. Please analyze it and return a response in JSON format.",
+                "content": f"Here is the stock data in JSON format: {json.dumps(stock_data)}. Please analyze it and return a response in JSON format. NOTE: you have only 300 tokens to respond make sure you fit in the limit go under if you need to.",
             },
         ],
         temperature=0.3,  # low temp for factual response

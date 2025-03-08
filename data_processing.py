@@ -143,7 +143,7 @@ def get_worst_stock(analysis: list[dict]) -> dict | None:
     )
 
 
-def get_rising_stock(analysis: list[dict]) -> dict | None:
+def get_rising_stock(analysis: list[dict], limit:int = 1) -> list[dict] | None:
     """
     Perform a 3 step filter to get the rising stocks from a subreddits analysis.
     - 3 step filter
@@ -153,9 +153,10 @@ def get_rising_stock(analysis: list[dict]) -> dict | None:
 
     Parameters:
         analysis (list[dict]): A list containing a dictionary for each subreddit, with the analysis results for that subreddit.
+        limit (int): The maximum number of rising stocks to return.
 
     Returns:
-        dict: A dictionary containing information about the rising stocks. if there are no rising stocks return None
+       list[dict]: A list of length limit containing information in dictionary form about rising stocks sorted in descending order. if there are no rising stocks return None
     """
     # get all the stocks in each subreddit that have the highest sentiment
     # the stocks are already sorted by sentiment in descending order but there are usually multiple stocks with the same sentiment
