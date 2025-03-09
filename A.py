@@ -6,7 +6,7 @@ from gpt_processing import analyze_stock_data_with_gpt
 subreddits = ["wallstreetbets", "stocks", "stockmarket"]
 
 # Run the general analysis
-general_analysis = run_general_analysis(subreddits, limit=50) 
+general_analysis = run_general_analysis(subreddits, limit=10) 
 # get the top stock, worst stock and rising stock
 top_stock = get_top_stock(general_analysis)
 worst_stock = get_worst_stock(general_analysis)

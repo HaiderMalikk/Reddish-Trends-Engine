@@ -62,4 +62,5 @@ def analyze_stock_data_with_gpt(stock_data):
         response_format={"type": "json_object"},  # return JSON format
     )
 
+    print("✅ GPT Analysis Complete")
     return json.loads(response.choices[0].message.content)

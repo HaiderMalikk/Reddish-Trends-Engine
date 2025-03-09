@@ -9,8 +9,6 @@ openai
 vaderSentiment
 regex
 pandas
-tqdm
-yaspin
 finnhub-python
 flask_cors
 apscheduler

@@ -38,6 +38,22 @@ def load_cached_analysis():
             print(f"Error loading cached analysis: {e}")
             cached_analysis = None
 
+def is_cache_outdated():
+    """Check if cached analysis is outdated (more than 24 hours old)"""
+    if not cached_analysis or "last_updated" not in cached_analysis:
+        return True
+    
+    try:
+        last_updated = datetime.strptime(cached_analysis["last_updated"], "%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now()
+        diff = current_time - last_updated
+        
+        # Return True if more than 24 hours have passed
+        return diff.total_seconds() > 24 * 60 * 60
+    except Exception as e:
+        print(f"Error checking cache age: {e}")
+        return True
+
 def save_cached_analysis(analysis_data):
     """Save analysis data to cache file"""
     global cached_analysis
@@ -55,7 +71,7 @@ def perform_general_analysis():
     subreddits = ["wallstreetbets", "stocks", "stockmarket"]
     
     # Run the general analysis
-    general_analysis = run_general_analysis(subreddits, limit=50)
+    general_analysis = run_general_analysis(subreddits, limit=10)
     
     # get the top stock, worst stock and rising stock
     top_stock = get_top_stock(general_analysis)
@@ -176,12 +192,15 @@ def get_analysis():
         request_type = data["request"]["type"]
         
         if request_type == "getgeneralanalysis":
-            # Return cached analysis if available, otherwise perform fresh analysis
-            if cached_analysis:
+            # Check if cache is outdated
+            if cached_analysis and not is_cache_outdated():
                 print("Returning cached analysis")
                 return jsonify(cached_analysis)
             else:
-                print("No cached analysis available, performing fresh analysis")
+                if not cached_analysis:
+                    print("No cached analysis available, performing fresh analysis")
+                else:
+                    print("Cached analysis is outdated, performing fresh analysis")
                 return jsonify(perform_general_analysis())
                 
         elif request_type == "redogeneralanalysis":
@@ -200,13 +219,23 @@ def get_analysis():
             "message": "This endpoint supports POST requests for processing data.",
         })
 
-# Initialize scheduler
-scheduler = BackgroundScheduler()
+# Initialize scheduler with more reliable approach
+scheduler = BackgroundScheduler(daemon=True)
+# Run every day at 2:20 PM Eastern Time
 scheduler.add_job(func=scheduled_analysis, 
                   trigger='cron', 
-                  hour=0, 
-                  minute=0, 
+                  hour=14, 
+                  minute=25, 
                   timezone=pytz.timezone('US/Eastern'))
+
+# Also add an interval job as a fallback to ensure analysis runs at least once every 24 hours
+# This helps when the server restarts and might have missed the cron job
+scheduler.add_job(
+    func=scheduled_analysis,
+    trigger='interval',
+    hours=24,
+    next_run_time=datetime.now()  # Run once immediately when the server starts
+)
 
 # Load any existing cached analysis on startup
 load_cached_analysis()
