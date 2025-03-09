@@ -13,4 +13,5 @@ tqdm
 yaspin
 finnhub-python
 flask_cors
+apscheduler
 # TODO: download from github and check that -r works 
