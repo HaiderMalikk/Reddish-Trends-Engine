@@ -156,7 +156,7 @@ def get_rising_stock(analysis: list[dict], limit:int = 1) -> list[dict] | None:
         limit (int): The maximum number of rising stocks to return.
 
     Returns:
-       list[dict]: A list of length limit containing information in dictionary form about rising stocks sorted in descending order. if there are no rising stocks return None
+       wlist[dict]: A list of length limit containing information in dictionary form about rising stocks sorted in descending order. if there are no rising stocks return None
     """
     # get all the stocks in each subreddit that have the highest sentiment
     # the stocks are already sorted by sentiment in descending order but there are usually multiple stocks with the same sentiment

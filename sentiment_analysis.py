@@ -104,13 +104,29 @@ def get_reddit_posts(subreddit: str, limit: int) -> list:
         limit (int): The maximum number of posts to retrieve.
 
     Returns:
-        list: A list containing the titles, selftexts, and comments of the fetched posts.
+        list: A list of dictionaries containing the post title, text, and comments.
     """
     posts = []
     for submission in reddit.subreddit(subreddit).hot(limit=limit):
-        posts.append(f"{submission.title} {submission.selftext}")
+        post = {"title": submission.title, "text": submission.selftext, "comments": []}
+
         submission.comments.replace_more(limit=0)  # Load top-level comments only
-        posts.extend(comment.body for comment in submission.comments)
+
+        postnum = 1
+        for comment in submission.comments:
+            if comment.body:
+                post["comments"].append(f"Comment {postnum}: {comment.body}")
+                postnum += 1
+                if postnum > 10:
+                    break
+
+        # For sentiment analysis, combine all text
+        post["full_text"] = (
+            f"Post Title: {post['title']} Post Text: {post['text']} Top Comments:"
+            + " ".join(post["comments"])
+        )
+        posts.append(post)
+
     return posts
 
 
@@ -146,6 +162,55 @@ def normalize_score(score: float) -> float:
     return score * 10 if score > 0 or score < 0 else 0
 
 
+def parse_post_text(text: str) -> dict:
+    """
+    Parses a post text string into a structured dictionary.
+
+    Parameters:
+        text (str): The post text to parse.
+
+    Returns:
+        dict: A dictionary containing the structured post data.
+    """
+    try:
+        # Extract title
+        title_match = re.search(r"Post Title: (.*?) Post Text:", text)
+        title = title_match[1].strip() if title_match else "Unknown Title"
+
+        # Extract post text
+        text_match = re.search(r"Post Text: (.*?) Top Comments:", text)
+        post_text = text_match[1].strip() if text_match else "Unknown Text"
+
+        # Extract comments
+        comments_text = re.search(r"Top Comments:(.*)$", text, re.DOTALL)
+        comments = []
+
+        if comments_text:
+            comment_matches = re.findall(
+                r"Comment (\d+): (.*)(?=Comment \d+:|$)",
+                comments_text[1],
+                re.DOTALL,
+            )
+            comments.extend(
+                {"number": int(num), "content": content.strip()}
+                for num, content in comment_matches
+            )
+        return {
+            "title": title,
+            "text": post_text,
+            "comments": comments,
+            "full_text": text,  # Keep the original text for reference
+        }
+    except Exception as e:
+        # If parsing fails, return a simple dictionary with the full text
+        return {
+            "title": f"Parsing Failed Error: {e}",
+            "text": "",
+            "comments": [],
+            "full_text": text,
+        }
+
+
 def extract_stock_mentions(posts: list) -> dict:
     """
     Extracts stock tickers like $TSLA, $AAPL and tracks their sentiment
@@ -156,25 +221,34 @@ def extract_stock_mentions(posts: list) -> dict:
     Returns:
         dict: A dictionary containing the stock symbols and their associated sentiment scores along with the actual post used for analysis.
     """
-    # Track stock mentions using a dictionary with a count a and list of sentiment scores, def inside function to reset each time
-    stock_mentions = defaultdict(
-        lambda: {"count": 0, "sentiment": []}
-    )  # Track stock mentions
+    stock_mentions = defaultdict(lambda: {"count": 0, "sentiment": []})
     stock_pattern = r"\$[A-Z]+"
+
     for post in posts:
-        matches = re.findall(stock_pattern, post)
-        sentiment = analyze_sentiment(post)
+        if isinstance(post, dict):
+            text = post["full_text"]
+            structured_post = post
+        else:
+            text = post
+            structured_post = parse_post_text(text)
+
+        matches = re.findall(stock_pattern, text)
+        sentiment = analyze_sentiment(text)
+
         for stock in matches:
             stock_mentions[stock]["count"] += 1
             stock_mentions[stock]["sentiment"].append(round(sentiment, 2))
-            stock_mentions[stock]["post"] = post
+            stock_mentions[stock]["post"] = structured_post
 
     # Calculate average sentiment per stock
     for stock in stock_mentions:
-        avg_sentiment = sum(stock_mentions[stock]["sentiment"]) / len(
-            stock_mentions[stock]["sentiment"]
-        )
-        stock_mentions[stock]["sentiment"] = normalize_score(avg_sentiment)
+        if stock_mentions[stock]["sentiment"]:
+            avg_sentiment = sum(stock_mentions[stock]["sentiment"]) / len(
+                stock_mentions[stock]["sentiment"]
+            )
+            stock_mentions[stock]["sentiment"] = round(
+                normalize_score(avg_sentiment), 2
+            )
 
     return stock_mentions
 
