@@ -188,6 +188,91 @@ def scheduled_analysis():
     except Exception as e:
         print(f"Error in scheduled analysis: {e}")
 
+def perform_playground_general_analysis(parameters):
+    """
+    Perform a customizable general analysis based on provided parameters
+    No caching is done for playground results
+    """
+    subreddits = parameters.get("subreddits", ["wallstreetbets", "stocks", "stockmarket"])
+    limit = int(parameters.get("limit", 10))
+    comment_limit = int(parameters.get("comment_limit", 10))
+    sort = parameters.get("sort", "hot")
+    period = parameters.get("period", "1mo")
+    
+    print(f"Running playground general analysis with: subreddits={subreddits}, limit={limit}, comment_limit={comment_limit}, sort={sort}, period={period}")
+    
+    # Run the general analysis with custom parameters
+    general_analysis = run_general_analysis(subreddits, limit, comment_limit, sort, period)
+    
+    # Process the results
+    response_data = {
+        "analysis_results": general_analysis,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    return response_data
+
+def perform_playground_specific_analysis(parameters):
+    """
+    Perform a customizable specific stock analysis based on provided parameters
+    No caching is done for playground results
+    """
+    subreddits = parameters.get("subreddits", ["wallstreetbets", "stocks", "stockmarket"])
+    stocks = parameters.get("stocks", ["$AAPL", "$TSLA"])
+    limit = int(parameters.get("limit", 10))
+    comment_limit = int(parameters.get("comment_limit", 10))
+    sort = parameters.get("sort", "hot")
+    period = parameters.get("period", "1mo")
+    
+    print(f"Running playground specific analysis with: subreddits={subreddits}, stocks={stocks}, limit={limit}, comment_limit={comment_limit}, sort={sort}, period={period}")
+    
+    # Run the specific stock analysis with custom parameters
+    specific_analysis = run_specific_stock_analysis(subreddits, stocks, limit, comment_limit, sort, period)
+    
+    # Process the results
+    response_data = {
+        "analysis_results": specific_analysis,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    return response_data
+
+@app.route("/api/playground", methods=["POST"])
+def playground_analysis():
+    """
+    Endpoint for customizable stock analysis requests.
+    Supports both general analysis and specific stock analysis with custom parameters.
+    """
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            print("Playground data received:", data)
+            
+            if not data or "request" not in data or "type" not in data["request"]:
+                return jsonify({"error": "Invalid request format"}), 400
+                
+            request_type = data["request"]["type"]
+            parameters = data["request"].get("parameters", {})
+            
+            if request_type == "getplaygroundgeneralanalysis":
+                print("Processing playground general analysis request")
+                result = perform_playground_general_analysis(parameters)
+                return jsonify(result)
+                
+            elif request_type == "getplaygroundspecificanalysis":
+                print("Processing playground specific stock analysis request")
+                result = perform_playground_specific_analysis(parameters)
+                return jsonify(result)
+                
+            else:
+                return jsonify({"error": f"Unknown request type: {request_type}"}), 400
+                
+        except Exception as e:
+            print(f"Error processing playground request: {str(e)}")
+            return jsonify({"error": f"Error processing request: {str(e)}"}), 500
+    
+    return jsonify({"error": "Method not allowed"}), 405
+
 @app.route("/api/home", methods=["GET", "POST"])
 def get_analysis():
     global cached_analysis
