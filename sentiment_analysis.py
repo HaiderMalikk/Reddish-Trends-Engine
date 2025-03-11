@@ -95,20 +95,27 @@ reddit = praw.Reddit(
 print(f"✅ Authenticated as: {reddit.user.me()}\n")
 
 
-def get_reddit_posts(subreddit: str, limit: int) -> list:
+def get_reddit_posts(subreddit: str, limit: int, comment_limit: int, post_type: str) -> list:
     """
     Fetch posts and comments from a specified subreddit.
 
     Parameters:
         subreddit (str): The name of the subreddit to fetch posts from.
         limit (int): The maximum number of posts to retrieve.
+        comment_limit (int): The maximum number of comments to retrieve for each post.
+        post_type (str): The type of posts to fetch (e.g., "hot", "new", "top").
 
     Returns:
-        list: A list of dictionaries containing the post title, text, and comments.
+        list: A list of dictionaries containing the post title, text, comments, and link.
     """
     posts = []
-    for submission in reddit.subreddit(subreddit).hot(limit=limit):
-        post = {"title": submission.title, "text": submission.selftext, "comments": []}
+    for submission in reddit.subreddit(subreddit).__getattr__(post_type)(limit=limit):
+        post = {
+            "title": submission.title, 
+            "text": submission.selftext, 
+            "comments": [],
+            "link": submission.url  
+        }
 
         submission.comments.replace_more(limit=0)  # Load top-level comments only
 
@@ -117,12 +124,12 @@ def get_reddit_posts(subreddit: str, limit: int) -> list:
             if comment.body:
                 post["comments"].append(f"Comment {postnum}: {comment.body}")
                 postnum += 1
-                if postnum > 10:
+                if postnum > comment_limit:
                     break
 
         # For sentiment analysis, combine all text
         post["full_text"] = (
-            f"Post Title: {post['title']} Post Text: {post['text']} Top Comments:"
+            f"Post Title: {post['title']} Post Text: {post['text']} Post Link: {post['link']} Top Comments:"
             + " ".join(post["comments"])
         )
         posts.append(post)
@@ -178,8 +185,12 @@ def parse_post_text(text: str) -> dict:
         title = title_match[1].strip() if title_match else "Unknown Title"
 
         # Extract post text
-        text_match = re.search(r"Post Text: (.*?) Top Comments:", text)
+        text_match = re.search(r"Post Text: (.*?) Post Link:", text)
         post_text = text_match[1].strip() if text_match else "Unknown Text"
+        
+        # Extract link
+        link_match = re.search(r"Post Link: (.*?) Top Comments:", text)
+        link = link_match[1].strip() if link_match else ""
 
         # Extract comments
         comments_text = re.search(r"Top Comments:(.*)$", text, re.DOTALL)
@@ -198,6 +209,7 @@ def parse_post_text(text: str) -> dict:
         return {
             "title": title,
             "text": post_text,
+            "link": link,
             "comments": comments,
             "full_text": text,  # Keep the original text for reference
         }
@@ -206,6 +218,7 @@ def parse_post_text(text: str) -> dict:
         return {
             "title": f"Parsing Failed Error: {e}",
             "text": "",
+            "link": "",
             "comments": [],
             "full_text": text,
         }
@@ -253,12 +266,12 @@ def extract_stock_mentions(posts: list) -> dict:
     return stock_mentions
 
 
-def get_reddit_analysis(subreddit: str, limit: int) -> dict:
+def get_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_type: str) -> dict:
     """
     gets and Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
 
     Parameters:
-        subreddit (str): The name of the subreddit to analyze.
+        subreddits (list): A list of subreddit names to analyze.
         limit (int): The maximum number of posts to retrieve.
 
     Returns:
@@ -267,7 +280,7 @@ def get_reddit_analysis(subreddit: str, limit: int) -> dict:
             - "worst_stocks": The bottom 5 stocks with the lowest sentiment scores.
             - "rising_stocks": Stocks with sentiment scores above 0.5, indicating positive sentiment.
     """
-    posts = get_reddit_posts(subreddit, limit)
+    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type)
     sentiment_data = extract_stock_mentions(posts)
 
     # Sort stocks by sentiment
@@ -282,7 +295,7 @@ def get_reddit_analysis(subreddit: str, limit: int) -> dict:
     rising_stocks = [
         s for s in sorted_stocks if s[1]["sentiment"] > 0.5
     ]  # Positive sentiment threshold
-
+    
     return {
         "top_stocks": top_stocks,
         "worst_stocks": worst_stocks,
@@ -290,7 +303,7 @@ def get_reddit_analysis(subreddit: str, limit: int) -> dict:
     }
 
 
-def get_stock_analysis(stock: str, subreddit: str, limit: int) -> dict:
+def get_stock_analysis(subreddits: list, stocks: list, limit: int, comment_limit: int, post_type: str) -> dict:
     """
     Returns sentiment and mentions for a specific stock.
 
@@ -302,29 +315,28 @@ def get_stock_analysis(stock: str, subreddit: str, limit: int) -> dict:
     Returns:
         str: A formatted string containing the stock's sentiment and mention counts.
     """
-    posts = get_reddit_posts(subreddit, limit)
+    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type)
     stock_data = extract_stock_mentions(posts)
-
-    if stock not in stock_data:
-        return {"specific_stock": None}
-
-    data = stock_data[stock]
-    return {
-        "specific_stock": [
-            (
-                stock,
+    
+    specific_stock_mentions = {"specific_stock": []}
+    
+    for s in stock_data:
+        if s in stocks:
+            specific_stock_mentions["specific_stock"].append(
+                (s,
                 {
-                    "count": data["count"],
-                    "sentiment": data["sentiment"],
-                    "post": data["post"],
+                    "count": stock_data[s]["count"],
+                    "sentiment": stock_data[s]["sentiment"],
+                    "post": stock_data[s]["post"],
                 },
+                )
             )
-        ]
-    }
+
+    return specific_stock_mentions
 
 
 # Main functions for general and specific analysis
-def general_reddit_analysis(subreddit: str, limit: int) -> dict:
+def general_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_type: str) -> dict:
     """
     Perform general stock analysis for a subreddit.
 
@@ -335,10 +347,10 @@ def general_reddit_analysis(subreddit: str, limit: int) -> dict:
     Returns:
         dict: A dictionary containing the general stock analysis for the subreddit.
     """
-    return get_reddit_analysis(subreddit, limit)
+    return get_reddit_analysis(subreddits, limit, comment_limit, post_type)
 
 
-def specific_stock_analysis(subreddit: str, stock: str, limit: int) -> dict:
+def specific_stock_analysis(subreddits: list, stocks: list, limit: int, comment_limit: int, post_type: str) -> dict:
     """
     Perform specific stock analysis for a subreddit.
 
@@ -350,4 +362,4 @@ def specific_stock_analysis(subreddit: str, stock: str, limit: int) -> dict:
     Returns:
         dict: A dictionary containing the specific stock analysis for the subreddit.
     """
-    return get_stock_analysis(stock, subreddit, limit)
+    return get_stock_analysis(subreddits, stocks, limit, comment_limit, post_type)

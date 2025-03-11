@@ -13,7 +13,7 @@ the analysis.
 import yfinance as yf
 
 
-def get_stock_data(symbol: str) -> dict:
+def get_stock_data(symbol: str, stock_period: str) -> dict:
     """
     Fetches stock data for a given symbol using yfinance and calculates the RSI value.
 
@@ -27,7 +27,7 @@ def get_stock_data(symbol: str) -> dict:
     try:
         # Fetch stock data using yfinance
         period = "1mo"  # Default period for fetching stock data neede for RSI
-        data = yf.download(symbol, period=period, progress=False)
+        data = yf.download(symbol, period=stock_period, progress=False)
 
         # If the data length is less than 2, we cannot calculate percentage change
         if data.empty or len(data) < 2:
@@ -80,7 +80,7 @@ def get_stock_data(symbol: str) -> dict:
         return {"error": error_msg}
 
 
-def merge_stock_data(reddit_analysis: dict) -> dict:
+def merge_stock_data(reddit_analysis: dict, stock_period: str) -> dict:
     """
     Merges Reddit sentiment analysis with stock data using yfinance.
 
@@ -101,7 +101,7 @@ def merge_stock_data(reddit_analysis: dict) -> dict:
 
         for stock, details in stocks:
             stock_symbol = stock.replace("$", "")  # Remove $ sign from symbol
-            stock_data = get_stock_data(stock_symbol)
+            stock_data = get_stock_data(stock_symbol, stock_period)
 
             if "error" in stock_data:
                 # Handle the case where no data is found or stock is delisted

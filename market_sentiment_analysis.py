@@ -17,7 +17,7 @@ from market_analysis import merge_stock_data
 import concurrent.futures
 
 
-def general_stock_and_social_analysis(subreddit: str, limit: int) -> dict:
+def general_stock_and_social_analysis(subreddit: str, limit: int, comment_limit: int, post_type: str, stock_period: str) -> dict:
     """
     Perform general Reddit analysis for a subreddit and a financial analysis from those results.
 
@@ -28,13 +28,13 @@ def general_stock_and_social_analysis(subreddit: str, limit: int) -> dict:
     Returns:
         dict: A dictionary containing the analysis results for the subreddit.
     """
-    general_analysis = general_reddit_analysis(subreddit, limit)
-    financial_data = merge_stock_data(general_analysis)
+    general_analysis = general_reddit_analysis(subreddit, limit, comment_limit, post_type)
+    financial_data = merge_stock_data(general_analysis, stock_period)
 
     return {subreddit: financial_data}
 
 
-def specific_stock_and_social_analysis(subreddit: str, stock: str, limit: int) -> dict:
+def specific_stock_and_social_analysis(subreddit: str, stocks: list, limit: int, comment_limit: int, post_type: str, stock_period: str) -> dict:
     """
     Perform specific stock analysis for a subreddit and a financial analysis from those results.
 
@@ -46,14 +46,14 @@ def specific_stock_and_social_analysis(subreddit: str, stock: str, limit: int) -
     Returns:
         dict: A dictionary containing the analysis results for the subreddit.
     """
-    specific_analysis = specific_stock_analysis(subreddit, stock, limit)
+    specific_analysis = specific_stock_analysis(subreddit, stocks, limit, comment_limit, post_type)
 
-    financial_data = merge_stock_data(specific_analysis)
+    financial_data = merge_stock_data(specific_analysis, stock_period)
 
     return {subreddit: financial_data}
 
 
-def run_general_analysis(subreddits: list, limit: int = 10) -> list[dict]:
+def run_general_analysis(subreddits: list, limit: int = 10, comment_limit: int = 10, post_type: str = "hot", stock_period: str = "1mo") -> list[dict]:
     """
     Perform sentiment analysis on a list of subreddits for all stocks.
 
@@ -75,6 +75,9 @@ def run_general_analysis(subreddits: list, limit: int = 10) -> list[dict]:
                 general_stock_and_social_analysis,
                 subreddit,
                 limit,
+                comment_limit,
+                post_type,
+                stock_period,
             )
             for subreddit in subreddits
         )
@@ -84,7 +87,7 @@ def run_general_analysis(subreddits: list, limit: int = 10) -> list[dict]:
 
 
 def run_specific_stock_analysis(
-    subreddits: list, stock: str, limit: int = 10
+    subreddits: list, stocks: list, limit: int = 10, comment_limit: int = 10, post_type: str = "hot", stock_period: str = "1mo"
 ) -> list[dict]:
     """
     Perform sentiment analysis on a list of subreddits for a specific stock.
@@ -107,8 +110,11 @@ def run_specific_stock_analysis(
             executor.submit(
                 specific_stock_and_social_analysis,
                 subreddit,
-                stock,
+                stocks,
                 limit,
+                comment_limit,
+                post_type,
+                stock_period,
             )
             for subreddit in subreddits
         )
