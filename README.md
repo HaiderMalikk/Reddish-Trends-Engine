@@ -7,9 +7,9 @@
 <img src="./assets/linkgrey.png" alt="Home" width="42"/>
 </a>
 
-## Altharion Engine: Mining Reddit for Financial Trends
+## Reddish Trends Engine: Mining Reddit for Financial Trends
 **Description**:  
-The Altharion Engine's first version √A v1.0 specializes in analyzing financial, stock, and crypto-related subreddits to uncover the best, worst, and most trending stocks. By diving into the conversations and sentiment of these communities, it identifies stock discussions that are gaining traction and feeds them into market analyzers for detailed financial data such as price, high, low, and RSI. With a focus on the power of Reddit’s financial chatter. Altharion also summarizes all of the data using GPT so you can focus on whats important. Altharion delivers insightful stock recommendations based on real-world community sentiment. It’s the ultimate tool to track and capitalize on the pulse of online financial discussions.
+The Reddish Trends Engine's first version √A v1.0 specializes in analyzing financial, stock, and crypto-related subreddits to uncover the best, worst, and most trending stocks. By diving into the conversations and sentiment of these communities, it identifies stock discussions that are gaining traction and feeds them into market analyzers for detailed financial data such as price, high, low, and RSI. With a focus on the power of Reddit’s financial chatter. Reddish Trends Engine also summarizes all of the data using GPT so you can focus on whats important. Reddish Trends Engine delivers insightful stock recommendations based on real-world community sentiment. It’s the ultimate tool to track and capitalize on the pulse of online financial discussions.
 
 * Test run table from model √A v1.0 (formatted)
 <img src="./assets/test_table.png" alt="Home" width="400"/>
