@@ -74,18 +74,19 @@ def perform_general_analysis():
     general_analysis = run_general_analysis(subreddits, 10)
     
     # get the top stock, worst stock and rising stock
-    top_stock = get_top_stock(general_analysis)
-    worst_stock = get_worst_stock(general_analysis)
+    top_stock = get_top_stock(general_analysis) 
+    worst_stock = get_worst_stock(general_analysis) 
     # Add a safety check for rising stocks
     rising_stocks = get_rising_stock(general_analysis)
-    if len(rising_stocks) > 1:
-        rising_stock = rising_stocks[1]  # Get second rising stock to avoid overlap
-    elif len(rising_stocks) > 0:
-        rising_stock = rising_stocks[0]  # Only one rising stock available
-    else:
-        rising_stock = None  # No rising stocks found
+    if rising_stocks:
+        if len(rising_stocks) > 1:
+            rising_stock = rising_stocks[1]  # Get second rising stock to avoid overlap
+        elif len(rising_stocks) > 0:
+            rising_stock = rising_stocks[0]  # Only one rising stock available
+        else:
+            rising_stocks = None  # No rising stocks found
     
-    # Check if stocks are valid dictionaries before analyzing
+    # Analyze the top, worst and rising stocks with GPT if available
     top_gpt_analysis = analyze_stock_data_with_gpt(top_stock) if top_stock else None
     worst_gpt_analysis = analyze_stock_data_with_gpt(worst_stock) if worst_stock else None
     rising_gpt_analysis = analyze_stock_data_with_gpt(rising_stock) if rising_stock else None
