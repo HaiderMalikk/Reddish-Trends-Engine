@@ -17,52 +17,92 @@ from market_analysis import merge_stock_data
 import concurrent.futures
 
 
-def general_stock_and_social_analysis(subreddit: str, limit: int, comment_limit: int, post_type: str, stock_period: str) -> dict:
+def general_stock_and_social_analysis(
+    subreddit: str,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+    stock_period: str,
+) -> dict:
     """
-    Perform general Reddit analysis for a subreddit and a financial analysis from those results.
+    Perform a general sentiment analysis on a subreddit and a financial analysis from those results.
 
     Parameters:
-        subreddit (str): The name of the subreddit to analyze.
-        limit (int): The maximum number of posts to retrieve.
+        subreddit (str): The subreddit to analyze.
+        limit (int): The maximum number of posts to retrieve for each subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
+        stock_period (str): The period of time to retrieve stock data for. Options are "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", and "ytd".
 
     Returns:
-        dict: A dictionary containing the analysis results for the subreddit.
+        dict: A dictionary with the subreddit as the key and the financial data as the value.
     """
-    general_analysis = general_reddit_analysis(subreddit, limit, comment_limit, post_type)
+    general_analysis = general_reddit_analysis(
+        subreddit, limit, comment_limit, post_type, time_filter
+    )
     financial_data = merge_stock_data(general_analysis, stock_period)
 
     return {subreddit: financial_data}
 
 
-def specific_stock_and_social_analysis(subreddit: str, stocks: list, limit: int, comment_limit: int, post_type: str, stock_period: str) -> dict:
+def specific_stock_and_social_analysis(
+    subreddit: str,
+    stocks: list,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+    stock_period: str,
+) -> dict:
     """
-    Perform specific stock analysis for a subreddit and a financial analysis from those results.
+    Perform sentiment analysis on a subreddit for a specific set of stocks and
+    merge the results with financial stock data.
 
     Parameters:
-        subreddit (str): The name of the subreddit to analyze.
-        stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
-        limit (int): The maximum number of posts to retrieve.
+        subreddit (str): The subreddit to analyze.
+        stocks (list): A list of stock symbols to analyze.
+        limit (int): The maximum number of posts to retrieve from the subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
+        stock_period (str): The period of time to retrieve stock data for. Options are "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", and "ytd".
 
     Returns:
-        dict: A dictionary containing the analysis results for the subreddit.
+        dict: A dictionary with the subreddit as the key and the merged financial data as the value.
     """
-    specific_analysis = specific_stock_analysis(subreddit, stocks, limit, comment_limit, post_type)
+    specific_analysis = specific_stock_analysis(
+        subreddit, stocks, limit, comment_limit, post_type, time_filter
+    )
 
     financial_data = merge_stock_data(specific_analysis, stock_period)
 
     return {subreddit: financial_data}
 
 
-def run_general_analysis(subreddits: list, limit: int = 10, comment_limit: int = 10, post_type: str = "hot", stock_period: str = "1mo") -> list[dict]:
+def run_general_analysis(
+    subreddits: list,
+    limit: int = 10,
+    comment_limit: int = 10,
+    post_type: str = "hot",
+    time_filter: str | None = None,
+    stock_period: str = "1mo",
+) -> list[dict]:
     """
-    Perform sentiment analysis on a list of subreddits for all stocks.
+    Run a general sentiment analysis on a list of subreddits and merge the results
+    with financial stock data.
 
     Parameters:
         subreddits (list): A list of subreddit names to analyze.
         limit (int): The maximum number of posts to retrieve for each subreddit. Defaults to 10.
+        comment_limit (int): The maximum number of comments to retrieve per post. Defaults to 10.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial". Defaults to "hot".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied. Defaults to None.
+        stock_period (str): The period of time to retrieve stock data for. Options are "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", and "ytd". Defaults to "1mo".
 
     Returns:
-        list[dict]: A list containing a dictionary for each subreddit, with the analysis results for that subreddit.
+        list[dict]: A list of dictionaries with the subreddit as the key and the merged financial data as the value.
     """
     results = []  # Store the results of each subreddit analysis
 
@@ -77,6 +117,7 @@ def run_general_analysis(subreddits: list, limit: int = 10, comment_limit: int =
                 limit,
                 comment_limit,
                 post_type,
+                time_filter,
                 stock_period,
             )
             for subreddit in subreddits
@@ -87,18 +128,29 @@ def run_general_analysis(subreddits: list, limit: int = 10, comment_limit: int =
 
 
 def run_specific_stock_analysis(
-    subreddits: list, stocks: list, limit: int = 10, comment_limit: int = 10, post_type: str = "hot", stock_period: str = "1mo"
+    subreddits: list,
+    stocks: list,
+    limit: int = 10,
+    comment_limit: int = 10,
+    post_type: str = "hot",
+    time_filter: str | None = None,
+    stock_period: str = "1mo",
 ) -> list[dict]:
     """
-    Perform sentiment analysis on a list of subreddits for a specific stock.
+    Run a sentiment analysis on a list of subreddits for a specific set of stocks and
+    merge the results with financial stock data.
 
     Parameters:
         subreddits (list): A list of subreddit names to analyze.
-        stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
+        stocks (list): A list of stock symbols to analyze.
         limit (int): The maximum number of posts to retrieve for each subreddit. Defaults to 10.
+        comment_limit (int): The maximum number of comments to retrieve per post. Defaults to 10.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial". Defaults to "hot".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied. Defaults to None.
+        stock_period (str): The period of time to retrieve stock data for. Options are "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", and "ytd". Defaults to "1mo".
 
     Returns:
-        list[dict]: A list containing a dictionary for each subreddit, with the analysis results in that subreddit for a specific stock.
+        list[dict]: A list of dictionaries with the subreddit as the key and the merged financial data as the value.
     """
     results = []  # Store the results of each subreddit analysis
 
@@ -114,6 +166,7 @@ def run_specific_stock_analysis(
                 limit,
                 comment_limit,
                 post_type,
+                time_filter,
                 stock_period,
             )
             for subreddit in subreddits

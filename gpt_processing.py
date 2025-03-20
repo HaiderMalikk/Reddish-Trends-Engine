@@ -1,3 +1,20 @@
+""" 
+This module provides functionality to analyze stock data using OpenAI's GPT model.
+
+The module authenticates with the OpenAI API and defines a function to analyze stock data sourced from a subreddit.
+The analysis includes an overview, market sentiment, technical analysis, fundamental analysis, and prediction of future stock performance.
+
+Functions:
+- analyze_stock_data_with_gpt(stock_data): Analyzes stock data using a GPT model and returns the analysis in JSON format.
+
+Dependencies:
+-------------
+- openai: For interacting with the OpenAI API.
+- os: For accessing environment variables.
+- json: For handling JSON data.
+- dotenv: For loading environment variables from a .env file.
+"""
+
 import openai
 import os
 import json

@@ -1,65 +1,24 @@
 """
-Reddit Data Analysis Script
+This module performs sentiment analysis on Reddit posts to identify and analyze stock mentions.
 
-This script performs sentiment analysis on Reddit posts and comments to analyze stock mentions and their sentiments.
-It uses the PRAW (Python Reddit API Wrapper) to fetch data from Reddit and the VADER (Valence Aware Dictionary and sEntiment Reasoner) sentiment analysis tool to analyze the sentiment of the text.
+Modules:
+- praw: Python Reddit API Wrapper for accessing Reddit data.
+- os: Operating System module for accessing environment variables.
+- dotenv: For loading environment variables from a .env file.
+- vaderSentiment: Sentiment analysis tool for analyzing text sentiment.
+- collections: For creating a default dictionary to track stock mentions.
+- re: Regular expressions for extracting stock symbols from text.
 
-Steps to get to the final output:
-
-1. **API Client Initialization**:
-    - Initialize the OpenAI client using the OpenAI API key.
-    - Authenticate with the Reddit API using the credentials and create a Reddit client.
-
-2. **Fetch Reddit Posts**:
-    - Define a function `get_reddit_posts` to fetch posts and comments from a specified subreddit.
-    - The function retrieves the titles, selftexts, and comments of the fetched posts.
-
-3. **Sentiment Analysis**:
-    - Initialize the VADER sentiment analyzer.
-    - Define a function `analyze_sentiment` to analyze the sentiment of a given text.
-    - The function returns a sentiment score ranging from -1 (negative) to +1 (positive).
-
-4. **Normalize Sentiment Scores**:
-    - Define a function `normalize_score` to boost sentiment scores to improve ranking impact.
-    - The function amplifies positive and negative scores.
-
-5. **Extract Stock Mentions**:
-    - Define a function `extract_stock_mentions` to extract stock tickers (e.g., $TSLA, $AAPL) from the posts and track their sentiment.
-    - The function uses regular expressions to find stock tickers and calculates the average sentiment for each stock.
-
-6. **get reddit analysis**:
-    - Define a function `classify_stocks` to classify stocks mentioned in a subreddit's posts based on sentiment analysis.
-    - The function returns a dictionary containing lists of stocks classified into three categories:
-        - "top_stocks": The top 5 stocks with the highest sentiment scores.
-        - "worst_stocks": The bottom 5 stocks with the lowest sentiment scores.
-        - "rising_stocks": Stocks with sentiment scores above 0.5, indicating positive sentiment.
-
-7. **Specific Stock Analysis**:
-    - Define a function `specific_stock_analysis` to return sentiment and mentions for a specific stock.
-    - The function retrieves posts from a subreddit, extracts stock mentions, and returns a formatted string containing the stock's sentiment and mention counts.
-
-8. **General Reddit Analysis**:
-    - Define a function `general_reddit_analysis` to perform general stock analysis for a subreddit.
-    - The function analyzes the subreddit and returns the results.
-
-Usage:
-    - Run the script to authenticate with Reddit and OpenAI, fetch Reddit posts, perform sentiment analysis, and classify stocks based on sentiment.
-    - The script prints out the general stock analysis for the specified subreddit and the specific stock analysis for the specified stock.
-
-Example:
-    - To analyze the sentiment of stocks mentioned in the "wallstreetbets" subreddit and get the analysis for the stock "TSLA":
-        ```
-        subreddit = "wallstreetbets"
-        stock = "TSLA"
-        limit = 20
-        general_analysis = general_reddit_analysis(subreddit, limit)
-        specific_analysis = specific_stock_analysis(subreddit, stock, limit)
-        print(general_analysis)
-        print(specific_analysis)
-        ```
-NOTE: only one subbreddit can be analyzed at a time, while you can input a whole array of subreddits
-in the main function each subreddit will be analyzed one at a time on multiple threads.
-this is more efficient than analyzing all subreddits at once, its possible beacuse each subreddit is independent of the other.
+Functions:
+- get_reddit_posts: Fetches posts and comments from a specified subreddit.
+- analyze_sentiment: Analyzes the sentiment of a given text.
+- normalize_score: Normalizes sentiment scores to improve ranking impact.
+- parse_post_text: Parses a post text string into a structured dictionary.
+- extract_stock_mentions: Extracts stock tickers and tracks their sentiment.
+- get_reddit_analysis: Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
+- get_stock_analysis: Returns sentiment and mentions for specific stocks.
+- general_reddit_analysis: Performs general stock analysis for a subreddit.
+- specific_stock_analysis: Performs specific stock analysis for a subreddit.
 """
 
 import praw  # Python Reddit API Wrapper
@@ -95,26 +54,43 @@ reddit = praw.Reddit(
 print(f"✅ Authenticated as: {reddit.user.me()}\n")
 
 
-def get_reddit_posts(subreddit: str, limit: int, comment_limit: int, post_type: str) -> list:
+def get_reddit_posts(
+    subreddit: str,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+) -> list:
     """
     Fetch posts and comments from a specified subreddit.
 
     Parameters:
         subreddit (str): The name of the subreddit to fetch posts from.
         limit (int): The maximum number of posts to retrieve.
-        comment_limit (int): The maximum number of comments to retrieve for each post.
-        post_type (str): The type of posts to fetch (e.g., "hot", "new", "top").
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", rising and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
 
     Returns:
         list: A list of dictionaries containing the post title, text, comments, and link.
     """
+
     posts = []
-    for submission in reddit.subreddit(subreddit).__getattr__(post_type)(limit=limit):
+    # Get the subreddit method (hot, new, top, etc.)
+    subreddit_method = reddit.subreddit(subreddit).__getattr__(post_type)
+
+    # Call the method with appropriate parameters based on whether time_filter is provided
+    if time_filter is not None and post_type in {"top", "controversial"}:
+        submissions = subreddit_method(time_filter=time_filter, limit=limit)
+    else:
+        submissions = subreddit_method(limit=limit)
+
+    for submission in submissions:
         post = {
-            "title": submission.title, 
-            "text": submission.selftext, 
+            "title": submission.title,
+            "text": submission.selftext,
             "comments": [],
-            "link": submission.url  
+            "link": submission.url,
         }
 
         submission.comments.replace_more(limit=0)  # Load top-level comments only
@@ -151,6 +127,7 @@ def analyze_sentiment(text: str) -> float:
     Returns:
         float: The sentiment score of the text, ranging from -1 (negative) to +1 (positive).
     """
+
     return analyzer.polarity_scores(text)[
         "compound"
     ]  # Ranges from -1 (negative) to +1 (positive)
@@ -166,62 +143,8 @@ def normalize_score(score: float) -> float:
     Returns:
         float: The normalized sentiment score.
     """
+
     return score * 10 if score > 0 or score < 0 else 0
-
-
-def parse_post_text(text: str) -> dict:
-    """
-    Parses a post text string into a structured dictionary.
-
-    Parameters:
-        text (str): The post text to parse.
-
-    Returns:
-        dict: A dictionary containing the structured post data.
-    """
-    try:
-        # Extract title
-        title_match = re.search(r"Post Title: (.*?) Post Text:", text)
-        title = title_match[1].strip() if title_match else "Unknown Title"
-
-        # Extract post text
-        text_match = re.search(r"Post Text: (.*?) Post Link:", text)
-        post_text = text_match[1].strip() if text_match else "Unknown Text"
-        
-        # Extract link
-        link_match = re.search(r"Post Link: (.*?) Top Comments:", text)
-        link = link_match[1].strip() if link_match else ""
-
-        # Extract comments
-        comments_text = re.search(r"Top Comments:(.*)$", text, re.DOTALL)
-        comments = []
-
-        if comments_text:
-            comment_matches = re.findall(
-                r"Comment (\d+): (.*)(?=Comment \d+:|$)",
-                comments_text[1],
-                re.DOTALL,
-            )
-            comments.extend(
-                {"number": int(num), "content": content.strip()}
-                for num, content in comment_matches
-            )
-        return {
-            "title": title,
-            "text": post_text,
-            "link": link,
-            "comments": comments,
-            "full_text": text,  # Keep the original text for reference
-        }
-    except Exception as e:
-        # If parsing fails, return a simple dictionary with the full text
-        return {
-            "title": f"Parsing Failed Error: {e}",
-            "text": "",
-            "link": "",
-            "comments": [],
-            "full_text": text,
-        }
 
 
 def extract_stock_mentions(posts: list) -> dict:
@@ -234,16 +157,12 @@ def extract_stock_mentions(posts: list) -> dict:
     Returns:
         dict: A dictionary containing the stock symbols and their associated sentiment scores along with the actual post used for analysis.
     """
+
     stock_mentions = defaultdict(lambda: {"count": 0, "sentiment": []})
     stock_pattern = r"\$[A-Z]+"
 
     for post in posts:
-        if isinstance(post, dict):
-            text = post["full_text"]
-            structured_post = post
-        else:
-            text = post
-            structured_post = parse_post_text(text)
+        text = post["full_text"]
 
         matches = re.findall(stock_pattern, text)
         sentiment = analyze_sentiment(text)
@@ -251,7 +170,7 @@ def extract_stock_mentions(posts: list) -> dict:
         for stock in matches:
             stock_mentions[stock]["count"] += 1
             stock_mentions[stock]["sentiment"].append(round(sentiment, 2))
-            stock_mentions[stock]["post"] = structured_post
+            stock_mentions[stock]["post"] = post
 
     # Calculate average sentiment per stock
     for stock in stock_mentions:
@@ -266,21 +185,31 @@ def extract_stock_mentions(posts: list) -> dict:
     return stock_mentions
 
 
-def get_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_type: str) -> dict:
+def get_reddit_analysis(
+    subreddits: list,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+) -> dict:
     """
-    gets and Classifies stocks mentioned in a subreddit's posts based on sentiment analysis.
+    Perform sentiment analysis on Reddit posts from specified subreddits and
+    categorize stocks based on their sentiment scores.
 
     Parameters:
-        subreddits (list): A list of subreddit names to analyze.
-        limit (int): The maximum number of posts to retrieve.
+        subreddits (list): A list of subreddit names to fetch posts from.
+        limit (int): The maximum number of posts to retrieve for each subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
 
     Returns:
-        dict: A dictionary containing lists of stocks classified into three categories:
-            - "top_stocks": The top 5 stocks with the highest sentiment scores.
-            - "worst_stocks": The bottom 5 stocks with the lowest sentiment scores.
-            - "rising_stocks": Stocks with sentiment scores above 0.5, indicating positive sentiment.
+        dict: A dictionary containing the categorized stocks as 'top_stocks',
+              'worst_stocks', and 'rising_stocks', each represented as a list of tuples
+              with stock symbol and associated sentiment data.
     """
-    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type)
+
+    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type, time_filter)
     sentiment_data = extract_stock_mentions(posts)
 
     # Sort stocks by sentiment
@@ -295,7 +224,7 @@ def get_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_t
     rising_stocks = [
         s for s in sorted_stocks if s[1]["sentiment"] > 0.5
     ]  # Positive sentiment threshold
-    
+
     return {
         "top_stocks": top_stocks,
         "worst_stocks": worst_stocks,
@@ -303,32 +232,45 @@ def get_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_t
     }
 
 
-def get_stock_analysis(subreddits: list, stocks: list, limit: int, comment_limit: int, post_type: str) -> dict:
+def get_stock_analysis(
+    subreddits: list,
+    stocks: list,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+) -> dict:
     """
-    Returns sentiment and mentions for a specific stock.
+    Perform sentiment analysis on Reddit posts from specified subreddits for a
+    specific set of stocks.
 
     Parameters:
-        stock (str): The stock symbol to analyze. must be in the format TSLA for Tesla, AAPL for Apple, etc.
-        subreddit (str): The name of the subreddit to analyze.
-        limit (int): The maximum number of posts to retrieve.
+        subreddits (list): A list of subreddit names to fetch posts from.
+        stocks (list): A list of stock symbols to retrieve sentiment data for.
+        limit (int): The maximum number of posts to retrieve for each subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
 
     Returns:
-        str: A formatted string containing the stock's sentiment and mention counts.
+        dict: A dictionary containing the sentiment data for the specified stocks.
     """
-    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type)
+
+    posts = get_reddit_posts(subreddits, limit, comment_limit, post_type, time_filter)
     stock_data = extract_stock_mentions(posts)
-    
+
     specific_stock_mentions = {"specific_stock": []}
-    
+
     for s in stock_data:
         if s in stocks:
             specific_stock_mentions["specific_stock"].append(
-                (s,
-                {
-                    "count": stock_data[s]["count"],
-                    "sentiment": stock_data[s]["sentiment"],
-                    "post": stock_data[s]["post"],
-                },
+                (
+                    s,
+                    {
+                        "count": stock_data[s]["count"],
+                        "sentiment": stock_data[s]["sentiment"],
+                        "post": stock_data[s]["post"],
+                    },
                 )
             )
 
@@ -336,30 +278,54 @@ def get_stock_analysis(subreddits: list, stocks: list, limit: int, comment_limit
 
 
 # Main functions for general and specific analysis
-def general_reddit_analysis(subreddits: list, limit: int, comment_limit: int, post_type: str) -> dict:
+def general_reddit_analysis(
+    subreddits: list,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+) -> dict:
     """
-    Perform general stock analysis for a subreddit.
+    Perform general sentiment analysis on Reddit posts from specified subreddits.
 
     Parameters:
-        subreddit (str): The name of the subreddit to analyze.
-        limit (int): The maximum number of posts to retrieve.
+        subreddits (list): A list of subreddit names to fetch posts from.
+        limit (int): The maximum number of posts to retrieve for each subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
 
     Returns:
-        dict: A dictionary containing the general stock analysis for the subreddit.
+        dict: A dictionary containing categorized stocks into 'top_stocks', 'worst_stocks', and 'rising_stocks'.
     """
-    return get_reddit_analysis(subreddits, limit, comment_limit, post_type)
+
+    return get_reddit_analysis(subreddits, limit, comment_limit, post_type, time_filter)
 
 
-def specific_stock_analysis(subreddits: list, stocks: list, limit: int, comment_limit: int, post_type: str) -> dict:
+def specific_stock_analysis(
+    subreddits: list,
+    stocks: list,
+    limit: int,
+    comment_limit: int,
+    post_type: str,
+    time_filter: str | None,
+) -> dict:
     """
-    Perform specific stock analysis for a subreddit.
+    Perform sentiment analysis on Reddit posts from specified subreddits for a
+    specific set of stocks.
 
     Parameters:
-        subreddit (str): The name of the subreddit to analyze.
-        stock (str): The stock symbol to analyze. must be in the format TSLA
-        limit (int): The maximum number of posts to retrieve.
+        subreddits (list): A list of subreddit names to fetch posts from.
+        stocks (list): A list of stock symbols to retrieve sentiment data for.
+        limit (int): The maximum number of posts to retrieve for each subreddit.
+        comment_limit (int): The maximum number of comments to retrieve per post.
+        post_type (str): The type of posts to retrieve. Options are "hot", "new", "top", "rising", and "controversial".
+        time_filter (str | None): The time filter for top and controversial posts. Options are "hour", "day", "week", "month", "year", and "all". If None, no time filter is applied.
 
     Returns:
-        dict: A dictionary containing the specific stock analysis for the subreddit.
+        dict: A dictionary containing the sentiment data for the specified stocks.
     """
-    return get_stock_analysis(subreddits, stocks, limit, comment_limit, post_type)
+
+    return get_stock_analysis(
+        subreddits, stocks, limit, comment_limit, post_type, time_filter
+    )
