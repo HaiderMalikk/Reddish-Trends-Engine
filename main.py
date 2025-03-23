@@ -91,7 +91,7 @@ def perform_general_analysis():
     subreddits = ["wallstreetbets", "stocks", "stockmarket"]
 
     # Run the general analysis
-    general_analysis = run_general_analysis(subreddits, 10)
+    general_analysis = run_general_analysis(subreddits, 100)
 
     # get the top stock, worst stock and rising stock
     top_stock = get_top_stock(general_analysis)
