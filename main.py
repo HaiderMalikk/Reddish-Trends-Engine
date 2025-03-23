@@ -455,7 +455,4 @@ atexit.register(lambda: scheduler.shutdown())
 
 # this is the main function that runs the app
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)  # TODO turn of debug
-
-# Run the app
-# python3 main.py
+    app.run(port=5000)
