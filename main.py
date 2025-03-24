@@ -32,7 +32,7 @@ from datetime import datetime
 import pytz
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://www.reddishtrends.com"])
 
 print("Flask Server Running")
 
