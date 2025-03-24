@@ -32,31 +32,26 @@ from datetime import datetime
 import pytz
 
 app = Flask(__name__)
-CORS(app, origins=["https://www.reddishtrends.com"])
-print("Flask Server Running")
+CORS(app, origins=["https://www.reddishtrends.com"], supports_credentials=True)
+print("Flask server started")
 
-# Allowed domains for security check
 ALLOWED_ORIGINS = {"https://www.reddishtrends.com"}
 
 @app.before_request
 def check_origin():
-    """Manually enforce allowed origins for ALL requests."""
-    
-    # Check the 'Origin' header (sent by browsers)
+    """Manually enforce allowed origins and block localhost."""
+    # Get request's 'Origin' header
     origin = request.headers.get("Origin")
     if origin and origin not in ALLOWED_ORIGINS:
         return jsonify({"error": "Unauthorized origin"}), 403
-
-    # Block non-browser tools (Postman, curl) but allow empty Referers
+    # Block Postman, curl, and non-browser requests (empty referer)
     referer = request.headers.get("Referer")
     if referer and "reddishtrends.com" not in referer:
         return jsonify({"error": "Forbidden"}), 403
 
-
 # Global variable to store the cached analysis results
 cached_analysis = None
 CACHE_FILE = "cached_analysis.json"
-
 
 def load_cached_analysis():
     """Load cached analysis from file if it exists"""
