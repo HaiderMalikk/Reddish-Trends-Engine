@@ -34,6 +34,19 @@ import pytz
 app = Flask(__name__)
 CORS(app, origins=["https://www.reddishtrends.com"])
 
+ALLOWED_ORIGINS = {"https://www.reddishtrends.com"}  # Allowed domains
+
+@app.before_request
+def check_origin():
+    """Manually enforce allowed origins for ALL requests."""
+    origin = request.headers.get("Origin")  # Get the request's Origin header
+    if origin and origin not in ALLOWED_ORIGINS:
+        return jsonify({"error": "Unauthorized origin"}), 403
+    """ block postman curl etc """
+    referer = request.headers.get("Referer")
+    if not referer or "reddishtrends.com" not in referer:
+        return jsonify({"error": "Forbidden"}), 403
+
 print("Flask Server Running")
 
 # Global variable to store the cached analysis results
