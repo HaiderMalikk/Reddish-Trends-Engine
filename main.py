@@ -32,7 +32,7 @@ from datetime import datetime
 import pytz
 
 app = Flask(__name__)
-CORS(app, origins=["https://www.reddishtrends.com"], supports_credentials=True)
+CORS(app, origins=["https://www.reddishtrends.com"], supports_credentials=True) # support credentials for cookies 
 print("Flask server started")
 
 ALLOWED_ORIGINS = {"https://www.reddishtrends.com"}

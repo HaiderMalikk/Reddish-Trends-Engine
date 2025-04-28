@@ -1,4 +1,4 @@
-<img src="./assets/logo.png" alt="Home" width="400"/> 
+<img src="./assets/logo.png" alt="Home" width="800"/> 
 
 * *Backend for Reddish Trends – Reddit market analyst*  
 
