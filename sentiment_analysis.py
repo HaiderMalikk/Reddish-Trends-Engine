@@ -41,17 +41,26 @@ reddit_user_agent = os.getenv("REDDIT_USER_AGENT")
 reddit_username = os.getenv("REDDIT_USERNAME")
 reddit_password = os.getenv("REDDIT_PASSWORD")
 
-# Reddit API authentication
-reddit = praw.Reddit(
-    client_id=reddit_client_id,
-    client_secret=reddit_client_secret,
-    user_agent=reddit_user_agent,
-    username=reddit_username,
-    password=reddit_password,
-)
-
-# Print success message
-print(f"✅ Authenticated as: {reddit.user.me()}\n")
+# Check if required credentials are available
+if not reddit_client_id or not reddit_client_secret or not reddit_user_agent:
+    print("⚠️ Warning: Missing Reddit API credentials. Some features may not work.")
+    # Set a default value for development/testing only
+    reddit = None
+else:
+    try:
+        # Reddit API authentication
+        reddit = praw.Reddit(
+            client_id=reddit_client_id,
+            client_secret=reddit_client_secret,
+            user_agent=reddit_user_agent,
+            username=reddit_username,
+            password=reddit_password,
+        )
+        # Print success message
+        print(f"✅ Authenticated as: {reddit.user.me()}\n")
+    except Exception as e:
+        print(f"❌ Reddit authentication failed: {str(e)}")
+        reddit = None
 
 
 def get_reddit_posts(
@@ -74,42 +83,49 @@ def get_reddit_posts(
     Returns:
         list: A list of dictionaries containing the post title, text, comments, and link.
     """
+    # Check if Reddit client is available
+    if reddit is None:
+        print(f"⚠️ Reddit API not authenticated. Cannot fetch posts from r/{subreddit}.")
+        return []
 
     posts = []
-    # Get the subreddit method (hot, new, top, etc.)
-    subreddit_method = reddit.subreddit(subreddit).__getattr__(post_type)
+    try:
+        # Get the subreddit method (hot, new, top, etc.)
+        subreddit_method = reddit.subreddit(subreddit).__getattr__(post_type)
 
-    # Call the method with appropriate parameters based on whether time_filter is provided
-    if time_filter is not None and post_type in {"top", "controversial"}:
-        submissions = subreddit_method(time_filter=time_filter, limit=limit)
-    else:
-        submissions = subreddit_method(limit=limit)
+        # Call the method with appropriate parameters based on whether time_filter is provided
+        if time_filter is not None and post_type in {"top", "controversial"}:
+            submissions = subreddit_method(time_filter=time_filter, limit=limit)
+        else:
+            submissions = subreddit_method(limit=limit)
 
-    for submission in submissions:
-        post = {
-            "title": submission.title,
-            "text": submission.selftext,
-            "comments": [],
-            "link": submission.url,
-        }
+        for submission in submissions:
+            post = {
+                "title": submission.title,
+                "text": submission.selftext,
+                "comments": [],
+                "link": submission.url,
+            }
 
-        submission.comments.replace_more(limit=0)  # Load top-level comments only
+            submission.comments.replace_more(limit=0)  # Load top-level comments only
 
-        postnum = 1
-        for comment in submission.comments:
-            if comment.body:
-                post["comments"].append(f"Comment {postnum}: {comment.body}")
-                postnum += 1
-                if postnum > comment_limit:
-                    break
+            postnum = 1
+            for comment in submission.comments:
+                if comment.body:
+                    post["comments"].append(f"Comment {postnum}: {comment.body}")
+                    postnum += 1
+                    if postnum > comment_limit:
+                        break
 
-        # For sentiment analysis, combine all text
-        post["full_text"] = (
-            f"Post Title: {post['title']} Post Text: {post['text']} Post Link: {post['link']} Top Comments:"
-            + " ".join(post["comments"])
-        )
-        posts.append(post)
-
+            # For sentiment analysis, combine all text
+            post["full_text"] = (
+                f"Post Title: {post['title']} Post Text: {post['text']} Post Link: {post['link']} Top Comments:"
+                + " ".join(post["comments"])
+            )
+            posts.append(post)
+    except Exception as e:
+        print(f"❌ Error fetching Reddit posts: {str(e)}")
+    
     return posts
 
 
